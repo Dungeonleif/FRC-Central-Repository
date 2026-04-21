@@ -1,0 +1,2994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PIT HQ — FRC Team Management</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+<style>
+  html, body, #root { background: #0B0D11; color: #ECE9E4; min-height: 100%; margin: 0; }
+  body { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: #0B0D11; }
+  ::-webkit-scrollbar-thumb { background: #252B36; border-radius: 0; }
+  ::-webkit-scrollbar-thumb:hover { background: #353D4B; }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1",
+    "lucide-react": "https://esm.sh/lucide-react@0.383.0?deps=react@18.3.1&exports=Activity,AlertCircle,Award,Bot,Box,Calendar,Check,CheckCircle2,ChevronRight,Circle,Cog,Cpu,Database,FileCode,Filter,Flag,Gauge,GitBranch,Hammer,Hash,Layers,Link2,MessageSquare,MoreHorizontal,Package,Plus,Radio,Settings,Slack,Sparkles,Target,Trophy,Upload,Users,Wrench,Wifi,WifiOff,X,Zap,ClipboardList,FileUp,Clock,TrendingUp,User,UserCheck,UserX,Shuffle,ArrowRight,PenTool,Camera,DollarSign,Megaphone,FileText,Eye,ChevronDown,FolderOpen,Download,Layout,BarChart3,Crown,GraduationCap,LogOut,Lock,ShieldCheck,KeyRound"
+  }
+}
+</script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-type="module" data-presets="react">
+import React, { useState, useEffect, useMemo } from "react";
+import { createRoot } from "react-dom/client";
+import { Activity, AlertCircle, Award, Bot, Box, Calendar, Check, CheckCircle2, ChevronRight, Circle, Cog, Cpu, Database, FileCode, Filter, Flag, Gauge, GitBranch, Hammer, Hash, Layers, Link2, MessageSquare, MoreHorizontal, Package, Plus, Radio, Settings, Slack, Sparkles, Target, Trophy, Upload, Users, Wrench, Wifi, WifiOff, X, Zap, ClipboardList, FileUp, Clock, TrendingUp, User, UserCheck, UserX, Shuffle, ArrowRight, PenTool, Camera, DollarSign, Megaphone, FileText, Eye, ChevronDown, FolderOpen, Download, Layout, BarChart3, Crown, GraduationCap, LogOut, Lock, ShieldCheck, KeyRound } from "lucide-react";
+
+// ============================================================
+// FONTS (injected once)
+// ============================================================
+const FONT_STYLE = `
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap');
+
+  .font-mono-p { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  .font-sans-p { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  .font-cond   { font-family: 'IBM Plex Sans Condensed', system-ui, sans-serif; letter-spacing: 0.02em; }
+
+  .hq-root { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .scan-line {
+    background: linear-gradient(90deg, transparent, rgba(255,107,26,0.35), transparent);
+  }
+  .ticker {
+    animation: ticker 40s linear infinite;
+  }
+  @keyframes ticker {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .pulse-dot {
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.3; }
+  }
+  .diag-stripes {
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgba(255,107,26,0.12),
+      rgba(255,107,26,0.12) 6px,
+      transparent 6px,
+      transparent 12px
+    );
+  }
+  .hide-scroll::-webkit-scrollbar { display: none; }
+  .hide-scroll { scrollbar-width: none; }
+`;
+
+// ============================================================
+// COLOR / DESIGN TOKENS
+// ============================================================
+const C = {
+  bg:        "#0B0D11",
+  bgAlt:     "#0F1218",
+  surface:   "#151921",
+  surfaceUp: "#1B2029",
+  border:    "#252B36",
+  borderHi:  "#353D4B",
+  text:      "#ECE9E4",
+  textMut:   "#8B92A0",
+  textDim:   "#5A6170",
+  orange:    "#FF6B1A",
+  orangeDim: "#8A3A0F",
+  cyan:      "#4ACFE0",
+  green:     "#4ADE80",
+  amber:     "#FBBF24",
+  red:       "#EF4444",
+  purple:    "#A78BFA",
+};
+
+// ============================================================
+// INITIAL DATA
+// ============================================================
+// ============================================================
+// ROLES & TEAM CREDENTIALS (demo)
+// ============================================================
+const ROLES = [
+  {
+    id: "student",
+    label: "STUDENT",
+    blurb: "Build, code, scout, compete",
+    icon: "User",
+    color: "#4ACFE0", // cyan
+  },
+  {
+    id: "mentor",
+    label: "MENTOR",
+    blurb: "Guide, advise, sign off on work",
+    icon: "GraduationCap",
+    color: "#FBBF24", // amber
+  },
+  {
+    id: "captain",
+    label: "CAPTAIN",
+    blurb: "Lead the team, full admin access",
+    icon: "Crown",
+    color: "#FF6B1A", // orange
+  },
+];
+
+// Pre-seeded teams. In a real backend these would be hashed.
+const TEAMS_DB = [
+  { number: "2834", name: "Bionic Barons",    password: "reefscape26" },
+  { number: "254",  name: "The Cheesy Poofs", password: "poofs2026"   },
+  { number: "1678", name: "Citrus Circuits",  password: "citrus1678"  },
+];
+
+// ============================================================
+// PERMISSIONS — role-based gating
+// ============================================================
+const PERMISSIONS = {
+  // Tasks
+  "task.move":          ["student", "mentor", "captain"], // backlog → progress → review
+  "task.signOff":       ["mentor",  "captain"],           // review → done (final approval)
+  "task.reopen":        ["mentor",  "captain"],           // done → anywhere
+  "task.reassign":      ["mentor",  "captain"],           // change assignee
+
+  // Build / robot
+  "build.editProgress": ["mentor",  "captain"],           // progress sliders + notes
+  "build.upload":       ["student", "mentor", "captain"], // CAD/CAM uploads
+
+  // Attendance
+  "attendance.toggle":  ["mentor",  "captain"],           // mark anyone present/absent
+
+  // Competitions
+  "comp.updateStatus":  ["mentor",  "captain"],           // change status of an event
+  "comp.register":      ["captain"],                      // register the team for new event
+
+  // Integrations
+  "integration.toggle": ["captain"],                      // connect/disconnect services
+
+  // Slack-style messaging
+  "message.send":       ["student", "mentor", "captain"],
+};
+
+const can = (user, action) => {
+  if (!user) return false;
+  return (PERMISSIONS[action] || []).includes(user.role);
+};
+
+const SUBTEAMS = [
+  // Technical
+  { id: "mech",     name: "Mechanical",     category: "technical",   icon: "Wrench",     lead: "m3",  color: C.orange, blurb: "Chassis, mechanisms, physical build" },
+  { id: "cad",      name: "Design / CAD",   category: "technical",   icon: "PenTool",    lead: "m1",  color: C.cyan,   blurb: "Onshape / Fusion 360 modeling" },
+  { id: "elec",     name: "Electrical",     category: "technical",   icon: "Zap",        lead: "m5",  color: C.amber,  blurb: "Wiring, power, sensors, pneumatics" },
+  { id: "soft",     name: "Programming",    category: "technical",   icon: "FileCode",   lead: "m2",  color: C.green,  blurb: "Java, C++, Python — auto + teleop" },
+  // Operations & Business
+  { id: "biz",      name: "Business",       category: "operations",  icon: "DollarSign", lead: "m7",  color: C.purple, blurb: "Budget, grants, sponsorships" },
+  { id: "outreach", name: "Outreach",       category: "operations",  icon: "Megaphone",  lead: "m8",  color: C.cyan,   blurb: "Community events, FIRST mission" },
+  { id: "media",    name: "Media",          category: "operations",  icon: "Camera",     lead: "m9",  color: C.amber,  blurb: "Social, photo, branding" },
+  { id: "awards",   name: "Awards",         category: "operations",  icon: "Trophy",     lead: "m10", color: C.purple, blurb: "Impact Award, essays, presentations" },
+  // Competition
+  { id: "drive",    name: "Drive Team",     category: "competition", icon: "Target",     lead: "m4",  color: C.red,    blurb: "Driver, Operator, Human Player, Coach" },
+  { id: "scout",    name: "Scouting",       category: "competition", icon: "Eye",        lead: "m6",  color: C.green,  blurb: "Match data + alliance strategy" },
+];
+
+const MEMBERS_SEED = [
+  { id: "m1",  name: "Ava Chen",        subteam: "cad",      role: "Lead",     present: true  },
+  { id: "m2",  name: "Kai Morales",     subteam: "soft",     role: "Lead",     present: true  },
+  { id: "m3",  name: "Jordan Park",     subteam: "mech",     role: "Lead",     present: true  },
+  { id: "m4",  name: "Sam Okafor",      subteam: "drive",    role: "Driver",   present: true  },
+  { id: "m5",  name: "Riya Patel",      subteam: "elec",     role: "Lead",     present: false },
+  { id: "m6",  name: "Theo Ng",         subteam: "scout",    role: "Lead",     present: true  },
+  { id: "m7",  name: "Maya Singh",      subteam: "biz",      role: "Lead",     present: true  },
+  { id: "m8",  name: "Leo Ruiz",        subteam: "outreach", role: "Lead",     present: true  },
+  { id: "m9",  name: "Zara Hale",       subteam: "media",    role: "Lead",     present: true  },
+  { id: "m10", name: "Noah Becker",     subteam: "awards",   role: "Lead",     present: true  },
+  { id: "m11", name: "Priya Krishnan",  subteam: "cad",      role: "Member",   present: true  },
+  { id: "m12", name: "Miles Tanaka",    subteam: "mech",     role: "Member",   present: true  },
+  { id: "m13", name: "Iris Duval",      subteam: "mech",     role: "Member",   present: false },
+  { id: "m14", name: "Ben Carter",      subteam: "soft",     role: "Member",   present: true  },
+  { id: "m15", name: "Sofia Alvarez",   subteam: "elec",     role: "Member",   present: true  },
+  { id: "m16", name: "Hugo Leclerc",    subteam: "drive",    role: "Operator", present: true  },
+  { id: "m17", name: "Anya Volkov",     subteam: "drive",    role: "Human Pl.",present: true  },
+  { id: "m18", name: "Caleb Byrne",     subteam: "drive",    role: "Coach",    present: true  },
+  { id: "m19", name: "Rae Lindberg",    subteam: "scout",    role: "Member",   present: true  },
+  { id: "m20", name: "Dev Mehta",       subteam: "scout",    role: "Member",   present: true  },
+];
+
+const TASKS_SEED = [
+  { id: "t1",  title: "Finalize swerve module bearings spec",     subteam: "cad",      assignee: "m1",  priority: "high",   status: "progress", due: "2026-04-24", files: 2, sprintPts: 5 },
+  { id: "t2",  title: "Machine 2x elevator rails",                subteam: "mech",     assignee: "m3",  priority: "high",   status: "progress", due: "2026-04-26", files: 1, sprintPts: 8 },
+  { id: "t3",  title: "Tune autonomous path #3",                  subteam: "soft",     assignee: "m2",  priority: "med",    status: "review",   due: "2026-04-23", files: 0, sprintPts: 3 },
+  { id: "t4",  title: "Route CAN bus on drivetrain",              subteam: "elec",     assignee: "m5",  priority: "high",   status: "backlog",  due: "2026-04-25", files: 1, sprintPts: 5 },
+  { id: "t5",  title: "Draft Week-7 progress newsletter",         subteam: "media",    assignee: "m9",  priority: "low",    status: "progress", due: "2026-04-28", files: 0, sprintPts: 2 },
+  { id: "t6",  title: "Scouting app: match-scoring form v2",      subteam: "scout",    assignee: "m6",  priority: "med",    status: "progress", due: "2026-04-27", files: 0, sprintPts: 5 },
+  { id: "t7",  title: "Submit sponsor renewal — AeroWorks",       subteam: "biz",      assignee: "m7",  priority: "high",   status: "backlog",  due: "2026-04-30", files: 0, sprintPts: 3 },
+  { id: "t8",  title: "Impact Award essay — Section III draft",   subteam: "awards",   assignee: "m10", priority: "med",    status: "progress", due: "2026-04-29", files: 0, sprintPts: 5 },
+  { id: "t9",  title: "STEM day setup at Lincoln Middle",         subteam: "outreach", assignee: "m8",  priority: "med",    status: "review",   due: "2026-04-22", files: 0, sprintPts: 2 },
+  { id: "t10", title: "Driver practice — 60 cycle challenge",     subteam: "drive",    assignee: "m4",  priority: "high",   status: "progress", due: "2026-04-25", files: 0, sprintPts: 3 },
+  { id: "t11", title: "Shooter flywheel CAM program",             subteam: "cad",      assignee: "m11", priority: "med",    status: "backlog",  due: "2026-04-26", files: 3, sprintPts: 5 },
+  { id: "t12", title: "Limelight mount bracket — print v4",       subteam: "mech",     assignee: "m12", priority: "low",    status: "done",     due: "2026-04-19", files: 1, sprintPts: 2 },
+  { id: "t13", title: "Pneumatic pressure sensor wiring",         subteam: "elec",     assignee: "m15", priority: "med",    status: "progress", due: "2026-04-24", files: 0, sprintPts: 3 },
+  { id: "t14", title: "Vision pipeline: AprilTag pose filter",    subteam: "soft",     assignee: "m14", priority: "med",    status: "backlog",  due: "2026-04-28", files: 0, sprintPts: 5 },
+  { id: "t15", title: "Match schedule scraper for regional",      subteam: "scout",    assignee: "m20", priority: "low",    status: "done",     due: "2026-04-18", files: 0, sprintPts: 2 },
+];
+
+const SUBSYSTEMS_SEED = [
+  { id: "s1", name: "Drivetrain",  progress: 82, subteam: "mech", notes: "Swerve assembled, tuning wheel offsets.",    files: 4 },
+  { id: "s2", name: "Elevator",    progress: 58, subteam: "mech", notes: "Rails machined; belt tensioner pending.",    files: 3 },
+  { id: "s3", name: "Intake",      progress: 74, subteam: "mech", notes: "Compliant wheels installed, polycarb guard.", files: 2 },
+  { id: "s4", name: "Shooter",     progress: 41, subteam: "mech", notes: "Flywheel CAD v3 in review.",                  files: 5 },
+  { id: "s5", name: "Electrical",  progress: 65, subteam: "elec", notes: "PDH + VRM mounted, CAN routing in progress.", files: 1 },
+  { id: "s6", name: "Software",    progress: 55, subteam: "soft", notes: "Auto paths 1–2 stable, path 3 tuning.",       files: 0 },
+  { id: "s7", name: "Vision",      progress: 48, subteam: "soft", notes: "Limelight pipeline running, pose filter WIP.",files: 0 },
+  { id: "s8", name: "Pneumatics",  progress: 30, subteam: "elec", notes: "Compressor mounted, waiting on solenoids.",   files: 1 },
+];
+
+const COMPS_SEED = [
+  { id: "c1", name: "Silicon Valley Regional",   date: "2026-03-12", location: "San Jose, CA",     status: "completed",  rank: 14 },
+  { id: "c2", name: "Sacramento Regional",       date: "2026-04-02", location: "Sacramento, CA",   status: "completed",  rank: 9  },
+  { id: "c3", name: "Monterey Bay Regional",     date: "2026-05-07", location: "Monterey, CA",     status: "registered", rank: null },
+  { id: "c4", name: "FIRST Championship — HOU",  date: "2026-06-17", location: "Houston, TX",      status: "pending",    rank: null },
+  { id: "c5", name: "Off-season: CalGames",      date: "2026-09-20", location: "Woodside, CA",     status: "upcoming",   rank: null },
+];
+
+const INTEGRATIONS_SEED = [
+  { id: "slack",   name: "Slack",      desc: "Push task updates to #build-updates",    connected: true,  icon: "Slack" },
+  { id: "onshape", name: "Onshape",    desc: "Sync CAD revisions + part counts",       connected: true,  icon: "Box" },
+  { id: "github",  name: "GitHub",     desc: "Link commits to programming tasks",      connected: true,  icon: "GitBranch" },
+  { id: "tba",     name: "The Blue Alliance", desc: "Pull match + event data",          connected: true,  icon: "Database" },
+  { id: "frcev",   name: "FRC Events",  desc: "Registration + team info",              connected: false, icon: "Radio" },
+  { id: "gcal",    name: "Google Calendar", desc: "Sprint + competition dates",        connected: false, icon: "Calendar" },
+  { id: "notion",  name: "Notion",     desc: "Engineering notebook export",            connected: false, icon: "FileText" },
+  { id: "drive",   name: "Google Drive", desc: "CAD + media file sync",                connected: true,  icon: "FolderOpen" },
+];
+
+const SPRINT_SEED = {
+  name: "Sprint 07 — Pre-Monterey push",
+  startDate: "2026-04-14",
+  endDate: "2026-04-28",
+  goalPts: 60,
+  burndown: [
+    { day: "Apr 14", remaining: 60, ideal: 60 },
+    { day: "Apr 15", remaining: 58, ideal: 56 },
+    { day: "Apr 16", remaining: 53, ideal: 52 },
+    { day: "Apr 17", remaining: 49, ideal: 48 },
+    { day: "Apr 18", remaining: 47, ideal: 44 },
+    { day: "Apr 19", remaining: 43, ideal: 40 },
+    { day: "Apr 20", remaining: 38, ideal: 36 },
+    { day: "Apr 21", remaining: 34, ideal: 32 },
+  ],
+};
+
+// ============================================================
+// PERSISTENCE HELPERS
+// ============================================================
+const STORE_KEY = "frc-hq-v1";
+
+async function loadState() {
+  try {
+    const v = localStorage.getItem(STORE_KEY);
+    if (v) return JSON.parse(v);
+  } catch (_) {}
+  return null;
+}
+async function saveState(state) {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  } catch (_) {}
+}
+
+// ============================================================
+// ICON MAP (lucide lookup by string)
+// ============================================================
+const ICONS = {
+  Wrench, PenTool, Zap, FileCode, DollarSign, Megaphone, Camera, Trophy,
+  Target, Eye, Slack, Box, GitBranch, Database, Radio, Calendar, FileText, FolderOpen,
+  User, GraduationCap, Crown,
+};
+const Ic = ({ name, size = 16, color }) => {
+  const Comp = ICONS[name] || Circle;
+  return <Comp size={size} color={color} strokeWidth={1.8} />;
+};
+
+// ============================================================
+// ROOT
+// ============================================================
+function FRCHQ() {
+  const [view, setView] = useState("overview");
+  const [members, setMembers] = useState(MEMBERS_SEED);
+  const [tasks, setTasks] = useState(TASKS_SEED);
+  const [subsystems, setSubsystems] = useState(SUBSYSTEMS_SEED);
+  const [comps, setComps] = useState(COMPS_SEED);
+  const [integrations, setIntegrations] = useState(INTEGRATIONS_SEED);
+  const [sprint] = useState(SPRINT_SEED);
+  const [loaded, setLoaded] = useState(false);
+  const [user, setUser] = useState(null); // { teamNumber, teamName, role, displayName }
+
+  // hydrate (state + session)
+  useEffect(() => {
+    (async () => {
+      const s = await loadState();
+      if (s) {
+        s.members && setMembers(s.members);
+        s.tasks && setTasks(s.tasks);
+        s.subsystems && setSubsystems(s.subsystems);
+        s.comps && setComps(s.comps);
+        s.integrations && setIntegrations(s.integrations);
+        s.user && setUser(s.user);
+      }
+      setLoaded(true);
+    })();
+  }, []);
+
+  // persist on change
+  useEffect(() => {
+    if (!loaded) return;
+    saveState({ members, tasks, subsystems, comps, integrations, user });
+  }, [members, tasks, subsystems, comps, integrations, user, loaded]);
+
+  // derived
+  const overallProgress = useMemo(() => {
+    const sum = subsystems.reduce((a, s) => a + s.progress, 0);
+    return Math.round(sum / subsystems.length);
+  }, [subsystems]);
+
+  const memberById = (id) => members.find((m) => m.id === id);
+  const subteamById = (id) => SUBTEAMS.find((s) => s.id === id);
+  const absentMemberIds = members.filter((m) => !m.present).map((m) => m.id);
+  const orphanedTasks = tasks.filter(
+    (t) => absentMemberIds.includes(t.assignee) && t.status !== "done"
+  );
+
+  // task actions
+  const moveTask = (taskId, newStatus) =>
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t)));
+  const reassignTask = (taskId, newAssignee) =>
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, assignee: newAssignee } : t)));
+  const toggleAttendance = (memberId) =>
+    setMembers((prev) => prev.map((m) => (m.id === memberId ? { ...m, present: !m.present } : m)));
+  const updateSubsystem = (id, patch) =>
+    setSubsystems((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+  const toggleIntegration = (id) =>
+    setIntegrations((prev) => prev.map((i) => (i.id === id ? { ...i, connected: !i.connected } : i)));
+  const updateCompStatus = (id, status) =>
+    setComps((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
+
+  // ---- Auth ----
+  const login = (u) => setUser(u);
+  const logout = () => setUser(null);
+
+  // Wait for hydration before deciding login vs app to avoid a flash
+  if (!loaded) {
+    return (
+      <div className="hq-root min-h-screen flex items-center justify-center" style={{ background: C.bg, color: C.text }}>
+        <style>{FONT_STYLE}</style>
+        <div className="font-mono-p text-xs tracking-widest" style={{ color: C.textMut }}>
+          INITIALIZING PIT HQ…
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="hq-root min-h-screen" style={{ background: C.bg, color: C.text }}>
+        <style>{FONT_STYLE}</style>
+        <LoginPage onLogin={login} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="hq-root min-h-screen" style={{ background: C.bg, color: C.text }}>
+      <style>{FONT_STYLE}</style>
+
+      <TopBar
+        view={view}
+        setView={setView}
+        overallProgress={overallProgress}
+        orphanedCount={orphanedTasks.length}
+        user={user}
+        onLogout={logout}
+      />
+
+      <main className="max-w-[1400px] mx-auto px-6 py-6">
+        {view === "overview" && (
+          <OverviewPage
+            tasks={tasks}
+            members={members}
+            subsystems={subsystems}
+            comps={comps}
+            sprint={sprint}
+            overallProgress={overallProgress}
+            orphanedTasks={orphanedTasks}
+            memberById={memberById}
+            subteamById={subteamById}
+            onReassign={reassignTask}
+            setView={setView}
+            user={user}
+          />
+        )}
+        {view === "tasks" && (
+          <TasksPage
+            tasks={tasks}
+            members={members}
+            memberById={memberById}
+            subteamById={subteamById}
+            onMove={moveTask}
+            onReassign={reassignTask}
+            user={user}
+          />
+        )}
+        {view === "subteams" && (
+          <SubteamsPage
+            members={members}
+            tasks={tasks}
+            onToggleAttendance={toggleAttendance}
+            user={user}
+          />
+        )}
+        {view === "build" && (
+          <BuildPage
+            subsystems={subsystems}
+            onUpdate={updateSubsystem}
+            overallProgress={overallProgress}
+            user={user}
+          />
+        )}
+        {view === "scouting" && (
+          <ScoutingPage members={members} onToggleAttendance={toggleAttendance} user={user} />
+        )}
+        {view === "comps" && (
+          <CompetitionsPage comps={comps} onUpdate={updateCompStatus} user={user} />
+        )}
+        {view === "integrations" && (
+          <IntegrationsPage
+            integrations={integrations}
+            onToggle={toggleIntegration}
+            user={user}
+          />
+        )}
+      </main>
+
+      <Footer />
+    </div>
+  );
+}
+
+// ============================================================
+// TOP BAR (global nav + status)
+// ============================================================
+function TopBar({ view, setView, overallProgress, orphanedCount, user, onLogout }) {
+  const nav = [
+    { id: "overview",     label: "OVERVIEW",     icon: Gauge },
+    { id: "tasks",        label: "TASKS",        icon: ClipboardList },
+    { id: "subteams",     label: "SUBTEAMS",     icon: Users },
+    { id: "build",        label: "BUILD",        icon: Hammer },
+    { id: "scouting",     label: "SCOUTING",     icon: BarChart3 },
+    { id: "comps",        label: "COMPETITIONS", icon: Trophy },
+    { id: "integrations", label: "INTEGRATIONS", icon: Link2 },
+  ];
+  return (
+    <header
+      className="sticky top-0 z-40 border-b"
+      style={{ background: C.bg + "ee", borderColor: C.border, backdropFilter: "blur(8px)" }}
+    >
+      {/* top row: identity + progress */}
+      <div
+        className="border-b"
+        style={{ borderColor: C.border }}
+      >
+        <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center gap-6">
+          {/* logo block */}
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 flex items-center justify-center font-cond font-bold"
+              style={{ background: C.orange, color: C.bg }}
+            >
+              <Bot size={22} strokeWidth={2.2} />
+            </div>
+            <div className="leading-tight">
+              <div className="font-cond font-bold tracking-wider text-base">
+                TEAM {user?.teamNumber || "—"} · PIT HQ
+              </div>
+              <div className="font-mono-p text-[10px]" style={{ color: C.textMut }}>
+                {user?.teamName ? `${user.teamName.toUpperCase()} · ` : ""}SEASON 2026 · REEFSCAPE · BUILD WEEK 07
+              </div>
+            </div>
+          </div>
+
+          {/* spacer */}
+          <div className="flex-1" />
+
+          {/* overall progress gauge */}
+          <div className="hidden md:flex items-center gap-3">
+            <div className="text-right leading-tight">
+              <div className="font-mono-p text-[10px] uppercase tracking-wider" style={{ color: C.textMut }}>
+                Robot build
+              </div>
+              <div className="font-cond font-bold text-lg tabular-nums">
+                {overallProgress}
+                <span className="text-sm" style={{ color: C.textMut }}>%</span>
+              </div>
+            </div>
+            <div className="w-40 h-2 relative overflow-hidden" style={{ background: C.surface }}>
+              <div
+                className="absolute inset-y-0 left-0 transition-all"
+                style={{ width: `${overallProgress}%`, background: C.orange }}
+              />
+              <div className="absolute inset-0 diag-stripes opacity-40 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* alerts */}
+          {orphanedCount > 0 && (
+            <button
+              onClick={() => setView("overview")}
+              className="flex items-center gap-2 px-3 py-1.5 font-mono-p text-[11px] uppercase tracking-wider border transition-colors"
+              style={{ borderColor: C.orange, color: C.orange }}
+            >
+              <span className="pulse-dot w-1.5 h-1.5 rounded-full" style={{ background: C.orange }} />
+              {orphanedCount} task{orphanedCount !== 1 ? "s" : ""} need reassign
+            </button>
+          )}
+
+          <div className="flex items-center gap-2 px-3 py-1.5 font-mono-p text-[11px] uppercase tracking-wider" style={{ color: C.green }}>
+            <span className="pulse-dot w-1.5 h-1.5 rounded-full" style={{ background: C.green }} />
+            Live
+          </div>
+
+          {user && <UserMenu user={user} onLogout={onLogout} />}
+        </div>
+      </div>
+
+      {/* nav row */}
+      <div className="max-w-[1400px] mx-auto px-6 flex items-center">
+        <div className="flex overflow-x-auto hide-scroll">
+          {nav.map((n) => {
+            const active = view === n.id;
+            const Icon = n.icon;
+            return (
+              <button
+                key={n.id}
+                onClick={() => setView(n.id)}
+                className="relative px-4 py-3 font-mono-p text-[11px] tracking-widest flex items-center gap-2 whitespace-nowrap transition-colors"
+                style={{
+                  color: active ? C.text : C.textMut,
+                }}
+                onMouseEnter={(e) => !active && (e.currentTarget.style.color = C.text)}
+                onMouseLeave={(e) => !active && (e.currentTarget.style.color = C.textMut)}
+              >
+                <Icon size={13} strokeWidth={2} />
+                {n.label}
+                {active && (
+                  <span
+                    className="absolute bottom-0 left-0 right-0 h-[2px]"
+                    style={{ background: C.orange }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+// ============================================================
+// USER MENU (logged-in pill + dropdown w/ logout)
+// ============================================================
+function UserMenu({ user, onLogout }) {
+  const [open, setOpen] = useState(false);
+  const role = ROLES.find((r) => r.id === user.role) || ROLES[0];
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 pl-2 pr-2.5 py-1 border transition-colors"
+        style={{ borderColor: C.border, background: C.surface }}
+        onMouseEnter={(e) => (e.currentTarget.style.borderColor = role.color)}
+        onMouseLeave={(e) => (e.currentTarget.style.borderColor = C.border)}
+      >
+        <div
+          className="w-6 h-6 flex items-center justify-center"
+          style={{ background: role.color + "22", border: `1px solid ${role.color}55` }}
+        >
+          <Ic name={role.icon} size={12} color={role.color} />
+        </div>
+        <div className="text-left leading-tight hidden sm:block">
+          <div className="font-mono-p text-[10px] tracking-wider" style={{ color: role.color }}>
+            {role.label}
+          </div>
+          <div className="font-mono-p text-[9px]" style={{ color: C.textMut }}>
+            {user.displayName || `Team ${user.teamNumber}`}
+          </div>
+        </div>
+        <ChevronDown size={12} color={C.textMut} />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div
+            className="absolute right-0 top-full mt-1 z-50 border min-w-[240px]"
+            style={{ background: C.surfaceUp, borderColor: C.borderHi }}
+          >
+            <div className="p-3 border-b" style={{ borderColor: C.border }}>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-9 h-9 flex items-center justify-center"
+                  style={{ background: role.color + "22", border: `1px solid ${role.color}55` }}
+                >
+                  <Ic name={role.icon} size={16} color={role.color} />
+                </div>
+                <div className="leading-tight min-w-0">
+                  <div className="font-cond font-bold tracking-wide truncate">
+                    {user.displayName || "Team member"}
+                  </div>
+                  <div className="font-mono-p text-[10px]" style={{ color: C.textMut }}>
+                    TEAM {user.teamNumber} · {user.teamName}
+                  </div>
+                </div>
+              </div>
+              <div
+                className="font-mono-p text-[9px] tracking-widest mt-2 px-2 py-1 inline-block"
+                style={{ background: role.color + "22", color: role.color }}
+              >
+                ● SIGNED IN AS {role.label}
+              </div>
+            </div>
+
+            <button
+              onClick={() => { setOpen(false); onLogout(); }}
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-black/20 transition-colors"
+              style={{ color: C.red }}
+            >
+              <LogOut size={14} />
+              <span className="font-mono-p text-[11px] tracking-wider">SIGN OUT</span>
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// LOGIN PAGE
+// ============================================================
+function LoginPage({ onLogin }) {
+  const [teamInput, setTeamInput] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [role, setRole] = useState("student");
+  const [error, setError] = useState("");
+  const [showPw, setShowPw] = useState(false);
+
+  // Auto-fill helper when clicking a recent team chip
+  const quickFill = (team) => {
+    setTeamInput(team.number);
+    setPassword(team.password);
+    setError("");
+  };
+
+  const submit = (e) => {
+    e?.preventDefault?.();
+    setError("");
+    const q = teamInput.trim().toLowerCase();
+    if (!q) return setError("Enter your team number or name");
+    if (!password) return setError("Enter your team password");
+
+    // Match by number OR name (case-insensitive)
+    const team = TEAMS_DB.find(
+      (t) =>
+        t.number.toLowerCase() === q ||
+        t.name.toLowerCase() === q ||
+        t.name.toLowerCase().includes(q)
+    );
+
+    if (!team) return setError(`No team matched "${teamInput}". Try one of the demo teams below.`);
+    if (team.password !== password) return setError("Incorrect password for that team.");
+
+    onLogin({
+      teamNumber: team.number,
+      teamName: team.name,
+      role,
+      displayName: displayName.trim() || null,
+    });
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* Top branding strip */}
+      <div className="border-b" style={{ borderColor: C.border, background: C.bgAlt }}>
+        <div className="max-w-[1100px] mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 flex items-center justify-center" style={{ background: C.orange, color: C.bg }}>
+              <Bot size={20} strokeWidth={2.2} />
+            </div>
+            <div className="leading-tight">
+              <div className="font-cond font-bold tracking-wider">PIT HQ</div>
+              <div className="font-mono-p text-[9px]" style={{ color: C.textMut }}>
+                FRC TEAM MANAGEMENT · v1.0
+              </div>
+            </div>
+          </div>
+          <div className="font-mono-p text-[10px] tracking-widest hidden sm:block" style={{ color: C.textMut }}>
+            SECURE PIT ACCESS TERMINAL
+          </div>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 grid lg:grid-cols-2 max-w-[1100px] mx-auto w-full">
+        {/* LEFT — branding/marketing column */}
+        <div className="hidden lg:flex flex-col justify-center p-10 border-r relative overflow-hidden" style={{ borderColor: C.border }}>
+          <div className="absolute inset-0 grid-bg opacity-30" />
+          <div className="relative">
+            <div className="font-mono-p text-[10px] tracking-widest mb-3" style={{ color: C.orange }}>
+              ● 2026 REEFSCAPE SEASON · BUILD WEEK 07
+            </div>
+            <div className="font-cond text-5xl font-bold leading-none tracking-tight mb-4">
+              SIGN IN TO YOUR<br />
+              <span style={{ color: C.orange }}>TEAM HQ</span>
+            </div>
+            <div className="text-sm mb-8 max-w-sm" style={{ color: C.textMut }}>
+              One workspace for the whole team — tasks, CAD, scouting, sprints,
+              competition registration, and Slack/Onshape/GitHub all in one place.
+            </div>
+
+            {/* feature ticks */}
+            <div className="space-y-3">
+              {[
+                { icon: ShieldCheck, label: "Role-based access for students, mentors & captains" },
+                { icon: ClipboardList, label: "Sprint-tracked tasks across 10 subteams" },
+                { icon: Hammer,        label: "Robot build progress with CAD/CAM uploads" },
+                { icon: Link2,         label: "Slack · Onshape · GitHub · TBA integrations" },
+              ].map((f, i) => (
+                <div key={i} className="flex items-center gap-3 text-xs">
+                  <div className="w-7 h-7 flex items-center justify-center" style={{ background: C.bgAlt, border: `1px solid ${C.border}` }}>
+                    <f.icon size={13} color={C.orange} strokeWidth={2} />
+                  </div>
+                  <span>{f.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT — login form */}
+        <div className="flex flex-col justify-center p-6 lg:p-10">
+          <div className="border" style={{ borderColor: C.border, background: C.surface }}>
+            {/* form header */}
+            <div className="px-6 py-4 border-b flex items-center justify-between" style={{ borderColor: C.border }}>
+              <div>
+                <div className="font-mono-p text-[10px] tracking-widest" style={{ color: C.textMut }}>
+                  AUTHORIZATION REQUIRED
+                </div>
+                <div className="font-cond text-2xl font-bold tracking-wide">SIGN IN</div>
+              </div>
+              <Lock size={20} color={C.orange} />
+            </div>
+
+            <form onSubmit={submit} className="p-6 space-y-5">
+              {/* Team number/name */}
+              <div>
+                <label className="font-mono-p text-[10px] tracking-widest block mb-1.5" style={{ color: C.textMut }}>
+                  TEAM NUMBER OR NAME
+                </label>
+                <div className="relative">
+                  <Hash size={14} color={C.textMut} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    autoFocus
+                    value={teamInput}
+                    onChange={(e) => { setTeamInput(e.target.value); setError(""); }}
+                    placeholder="e.g. 2834 or Bionic Barons"
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border font-mono-p"
+                    style={{ background: C.bgAlt, borderColor: C.border, color: C.text, outline: "none" }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = C.orange)}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = C.border)}
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="font-mono-p text-[10px] tracking-widest block mb-1.5" style={{ color: C.textMut }}>
+                  TEAM PASSWORD
+                </label>
+                <div className="relative">
+                  <KeyRound size={14} color={C.textMut} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type={showPw ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                    placeholder="••••••••"
+                    className="w-full pl-9 pr-16 py-2.5 text-sm border font-mono-p"
+                    style={{ background: C.bgAlt, borderColor: C.border, color: C.text, outline: "none" }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = C.orange)}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = C.border)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw(!showPw)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 font-mono-p text-[9px] tracking-widest px-1.5 py-0.5"
+                    style={{ color: C.textMut, background: C.bg }}
+                  >
+                    {showPw ? "HIDE" : "SHOW"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Display name (optional) */}
+              <div>
+                <label className="font-mono-p text-[10px] tracking-widest block mb-1.5" style={{ color: C.textMut }}>
+                  YOUR NAME <span style={{ color: C.textDim }}>· OPTIONAL</span>
+                </label>
+                <div className="relative">
+                  <User size={14} color={C.textMut} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="What should we call you?"
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border font-sans-p"
+                    style={{ background: C.bgAlt, borderColor: C.border, color: C.text, outline: "none" }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = C.orange)}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = C.border)}
+                  />
+                </div>
+              </div>
+
+              {/* Role selector */}
+              <div>
+                <label className="font-mono-p text-[10px] tracking-widest block mb-2" style={{ color: C.textMut }}>
+                  I AM A
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {ROLES.map((r) => {
+                    const active = role === r.id;
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setRole(r.id)}
+                        className="relative p-3 border text-center transition-colors"
+                        style={{
+                          borderColor: active ? r.color : C.border,
+                          background: active ? r.color + "11" : C.bgAlt,
+                        }}
+                      >
+                        {active && (
+                          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: r.color }} />
+                        )}
+                        <div
+                          className="w-9 h-9 flex items-center justify-center mx-auto mb-2"
+                          style={{
+                            background: active ? r.color + "22" : C.bg,
+                            border: `1px solid ${active ? r.color + "55" : C.border}`,
+                          }}
+                        >
+                          <Ic name={r.icon} size={16} color={active ? r.color : C.textMut} />
+                        </div>
+                        <div
+                          className="font-mono-p text-[10px] tracking-widest font-bold"
+                          style={{ color: active ? r.color : C.text }}
+                        >
+                          {r.label}
+                        </div>
+                        <div className="font-mono-p text-[9px] mt-0.5 leading-tight" style={{ color: C.textMut }}>
+                          {r.blurb}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Error banner */}
+              {error && (
+                <div
+                  className="border px-3 py-2 flex items-start gap-2"
+                  style={{ borderColor: C.red + "55", background: C.red + "11" }}
+                >
+                  <AlertCircle size={14} color={C.red} className="flex-shrink-0 mt-0.5" />
+                  <div className="text-xs" style={{ color: C.red }}>{error}</div>
+                </div>
+              )}
+
+              {/* Submit */}
+              <button
+                type="submit"
+                className="w-full font-mono-p text-xs tracking-widest py-3 flex items-center justify-center gap-2 transition-opacity"
+                style={{ background: C.orange, color: C.bg }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+              >
+                <ShieldCheck size={14} />
+                AUTHORIZE & ENTER PIT HQ
+              </button>
+            </form>
+
+            {/* Demo creds */}
+            <div className="px-6 py-4 border-t" style={{ borderColor: C.border, background: C.bgAlt }}>
+              <div className="font-mono-p text-[10px] tracking-widest mb-2" style={{ color: C.textMut }}>
+                DEMO TEAMS · CLICK TO AUTOFILL
+              </div>
+              <div className="space-y-1.5">
+                {TEAMS_DB.map((t) => (
+                  <button
+                    key={t.number}
+                    type="button"
+                    onClick={() => quickFill(t)}
+                    className="w-full flex items-center gap-3 px-3 py-2 border text-left transition-colors"
+                    style={{ borderColor: C.border, background: C.bg }}
+                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = C.orange)}
+                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = C.border)}
+                  >
+                    <div className="font-cond font-bold text-sm tabular-nums w-12" style={{ color: C.orange }}>
+                      {t.number}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-medium truncate">{t.name}</div>
+                      <div className="font-mono-p text-[9px]" style={{ color: C.textMut }}>
+                        password: {t.password}
+                      </div>
+                    </div>
+                    <ChevronRight size={13} color={C.textMut} />
+                  </button>
+                ))}
+              </div>
+              <div className="font-mono-p text-[9px] mt-3 leading-relaxed" style={{ color: C.textDim }}>
+                ⚠ Prototype demo — credentials shown for testing only. In production, passwords would be hashed and stored on a secure backend.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// ROLE HINT — small banner shown when user lacks elevated perms
+// ============================================================
+function RoleHint({ user, requiredRole, action }) {
+  if (!user) return null;
+  const role = ROLES.find((r) => r.id === user.role);
+  const required = ROLES.find((r) => r.id === requiredRole);
+  return (
+    <div
+      className="border px-3 py-2 mb-4 flex items-center gap-2 text-xs"
+      style={{ borderColor: C.border, background: C.surface }}
+    >
+      <Lock size={12} color={C.textMut} className="flex-shrink-0" />
+      <span style={{ color: C.textMut }}>
+        Signed in as <span style={{ color: role?.color, fontWeight: 600 }}>{role?.label}</span> ·
+        {" "}{action} requires <span style={{ color: required?.color, fontWeight: 600 }}>{required?.label}</span>
+        {requiredRole === "mentor" && " or CAPTAIN"}
+      </span>
+    </div>
+  );
+}
+
+// ============================================================
+// FOOTER (ticker)
+// ============================================================
+function Footer() {
+  const items = [
+    "◆ Swerve module #3 offset drift resolved",
+    "◆ New CAD rev pushed to Onshape — Elevator v12",
+    "◆ Sponsor check from AeroWorks cleared $4,500",
+    "◆ Scouting dataset updated from TBA",
+    "◆ Monterey regional pit assignment: PIT 47",
+    "◆ Driver practice logged 62 cycles / 2min30",
+    "◆ Impact Award Section III — final review pending",
+    "◆ PDH CAN ID conflict flagged by Kai",
+  ];
+  const doubled = [...items, ...items];
+  return (
+    <footer
+      className="mt-12 border-t overflow-hidden py-3"
+      style={{ borderColor: C.border, background: C.bgAlt }}
+    >
+      <div className="flex gap-8 ticker font-mono-p text-[11px]" style={{ color: C.textMut }}>
+        {doubled.map((t, i) => (
+          <span key={i} className="whitespace-nowrap">{t}</span>
+        ))}
+      </div>
+    </footer>
+  );
+}
+
+// ============================================================
+// PLACEHOLDER PAGES — filled in next pass
+// ============================================================
+function OverviewPage({
+  tasks, members, subsystems, comps, sprint, overallProgress,
+  orphanedTasks, memberById, subteamById, onReassign, setView, user
+}) {
+  const openTasks = tasks.filter((t) => t.status !== "done").length;
+  const doneTasks = tasks.filter((t) => t.status === "done").length;
+  const totalTasks = tasks.length;
+  const presentCount = members.filter((m) => m.present).length;
+  const attendancePct = Math.round((presentCount / members.length) * 100);
+
+  const nextComp = comps.find((c) => c.status === "registered" || c.status === "pending") || comps[comps.length - 1];
+  const daysUntil = nextComp ? Math.max(0, Math.ceil((new Date(nextComp.date) - new Date("2026-04-21")) / 86400000)) : 0;
+
+  const sprintCompleted = sprint.goalPts - sprint.burndown[sprint.burndown.length - 1].remaining;
+  const sprintPct = Math.round((sprintCompleted / sprint.goalPts) * 100);
+
+  return (
+    <div className="space-y-6">
+      {/* Hero: robot progress + key stats */}
+      <div className="grid grid-cols-12 gap-4">
+        {/* Big robot progress */}
+        <div
+          className="col-span-12 lg:col-span-8 border relative overflow-hidden"
+          style={{ borderColor: C.border, background: C.surface }}
+        >
+          <div className="absolute inset-0 grid-bg opacity-40" />
+          <div className="relative p-6">
+            <div className="flex items-start justify-between mb-5">
+              <div>
+                <div className="font-mono-p text-[10px] tracking-widest" style={{ color: C.textMut }}>
+                  ROBOT · BUILD STATUS · 2026 REEFSCAPE
+                </div>
+                <div className="font-cond text-3xl font-bold mt-1">Robot "Tempest-II"</div>
+              </div>
+              <div className="text-right">
+                <div className="font-mono-p text-[10px]" style={{ color: C.textMut }}>
+                  TARGET · MONTEREY REGIONAL
+                </div>
+                <div className="font-cond text-2xl font-bold tabular-nums" style={{ color: C.orange }}>
+                  T−{daysUntil}d
+                </div>
+              </div>
+            </div>
+
+            {/* big progress bar */}
+            <div className="mb-5">
+              <div className="flex items-baseline justify-between mb-2">
+                <div className="font-mono-p text-xs tracking-wider">OVERALL COMPLETION</div>
+                <div className="font-cond text-4xl font-bold tabular-nums">
+                  {overallProgress}<span className="text-xl" style={{ color: C.textMut }}>%</span>
+                </div>
+              </div>
+              <div className="h-3 relative overflow-hidden" style={{ background: C.bgAlt }}>
+                <div
+                  className="absolute inset-y-0 left-0 transition-all"
+                  style={{ width: `${overallProgress}%`, background: C.orange }}
+                />
+                <div className="absolute inset-0 pointer-events-none">
+                  {[25, 50, 75].map((p) => (
+                    <div
+                      key={p}
+                      className="absolute top-0 bottom-0 w-px"
+                      style={{ left: `${p}%`, background: C.bg }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-between mt-1 font-mono-p text-[9px]" style={{ color: C.textDim }}>
+                <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+              </div>
+            </div>
+
+            {/* subsystem mini-bars */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-3">
+              {subsystems.map((s) => (
+                <div key={s.id}>
+                  <div className="flex items-baseline justify-between mb-1">
+                    <span className="font-mono-p text-[11px] tracking-wider">{s.name}</span>
+                    <span className="font-mono-p text-[11px] tabular-nums" style={{ color: C.textMut }}>
+                      {s.progress}%
+                    </span>
+                  </div>
+                  <div className="h-1 relative" style={{ background: C.bgAlt }}>
+                    <div
+                      className="absolute inset-y-0 left-0"
+                      style={{
+                        width: `${s.progress}%`,
+                        background: s.progress >= 70 ? C.green : s.progress >= 40 ? C.amber : C.red,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Stat column */}
+        <div className="col-span-12 lg:col-span-4 grid grid-cols-2 gap-4">
+          <StatCard
+            label="TASKS OPEN"
+            value={openTasks}
+            sub={`${doneTasks}/${totalTasks} complete`}
+            accent={C.cyan}
+            icon={ClipboardList}
+          />
+          <StatCard
+            label="ATTENDANCE"
+            value={`${attendancePct}%`}
+            sub={`${presentCount}/${members.length} present`}
+            accent={attendancePct >= 80 ? C.green : C.amber}
+            icon={UserCheck}
+          />
+          <StatCard
+            label="SPRINT PTS"
+            value={`${sprintCompleted}/${sprint.goalPts}`}
+            sub={`${sprintPct}% done`}
+            accent={C.orange}
+            icon={Activity}
+          />
+          <StatCard
+            label="NEXT EVENT"
+            value={nextComp ? `T−${daysUntil}` : "—"}
+            sub={nextComp?.name.split("—")[0].trim().slice(0, 16) || ""}
+            accent={C.purple}
+            icon={Trophy}
+          />
+        </div>
+      </div>
+
+      {/* Two-column: Reassignment + Sprint burndown */}
+      <div className="grid grid-cols-12 gap-4">
+        {/* Reassignment panel */}
+        <div
+          className="col-span-12 lg:col-span-7 border"
+          style={{ borderColor: orphanedTasks.length ? C.orange : C.border, background: C.surface }}
+        >
+          <div
+            className="flex items-center justify-between px-5 py-3 border-b"
+            style={{ borderColor: C.border }}
+          >
+            <div className="flex items-center gap-3">
+              <Shuffle size={16} color={C.orange} />
+              <div>
+                <div className="font-cond font-bold tracking-wide">REASSIGNMENT QUEUE</div>
+                <div className="font-mono-p text-[10px]" style={{ color: C.textMut }}>
+                  Tasks assigned to absent members
+                  {!can(user, "task.reassign") && (
+                    <span style={{ color: C.amber }}> · view only — flag a mentor</span>
+                  )}
+                </div>
+              </div>
+            </div>
+            {orphanedTasks.length > 0 && (
+              <div
+                className="font-mono-p text-[11px] px-2 py-0.5"
+                style={{ background: C.orangeDim, color: C.orange }}
+              >
+                {orphanedTasks.length} ACTION NEEDED
+              </div>
+            )}
+          </div>
+          <div className="p-5 space-y-2 max-h-96 overflow-y-auto hide-scroll">
+            {orphanedTasks.length === 0 ? (
+              <div className="py-10 text-center">
+                <CheckCircle2 size={28} color={C.green} className="mx-auto mb-2" />
+                <div className="font-cond tracking-wide">All tasks covered</div>
+                <div className="font-mono-p text-[11px] mt-1" style={{ color: C.textMut }}>
+                  No absent members have open tasks.
+                </div>
+              </div>
+            ) : (
+              orphanedTasks.map((t) => {
+                const st = subteamById(t.subteam);
+                const assignee = memberById(t.assignee);
+                const candidates = members.filter(
+                  (m) => m.subteam === t.subteam && m.present && m.id !== t.assignee
+                );
+                return (
+                  <div
+                    key={t.id}
+                    className="border p-3 flex items-center gap-3"
+                    style={{ borderColor: C.border, background: C.bgAlt }}
+                  >
+                    <div
+                      className="w-1 self-stretch"
+                      style={{ background: st?.color || C.textMut }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="font-mono-p text-[10px] tracking-wider" style={{ color: st?.color }}>
+                          {st?.name.toUpperCase()}
+                        </span>
+                        <PriorityPill priority={t.priority} />
+                      </div>
+                      <div className="text-sm font-medium truncate">{t.title}</div>
+                      <div className="flex items-center gap-1.5 mt-1 font-mono-p text-[10px]" style={{ color: C.red }}>
+                        <UserX size={11} /> {assignee?.name} · absent
+                      </div>
+                    </div>
+                    {can(user, "task.reassign") ? (
+                      <ReassignMenu
+                        candidates={candidates}
+                        onPick={(id) => onReassign(t.id, id)}
+                      />
+                    ) : (
+                      <div
+                        className="font-mono-p text-[10px] tracking-wider px-2.5 py-1.5 border flex items-center gap-1 whitespace-nowrap"
+                        style={{ borderColor: C.border, color: C.textMut }}
+                        title="Reassign requires mentor or captain role"
+                      >
+                        <Lock size={11} /> MENTOR ONLY
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Sprint burndown */}
+        <div
+          className="col-span-12 lg:col-span-5 border"
+          style={{ borderColor: C.border, background: C.surface }}
+        >
+          <div
+            className="flex items-center justify-between px-5 py-3 border-b"
+            style={{ borderColor: C.border }}
+          >
+            <div>
+              <div className="font-cond font-bold tracking-wide">SPRINT BURNDOWN</div>
+              <div className="font-mono-p text-[10px]" style={{ color: C.textMut }}>
+                {sprint.name}
+              </div>
+            </div>
+            <div
+              className="font-mono-p text-[10px] px-2 py-0.5"
+              style={{ background: C.bgAlt, color: C.cyan }}
+            >
+              DAY 8 / 14
+            </div>
+          </div>
+          <div className="p-5">
+            <Burndown data={sprint.burndown} />
+            <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t" style={{ borderColor: C.border }}>
+              <MiniStat label="GOAL" value={sprint.goalPts} color={C.textMut} />
+              <MiniStat label="DONE" value={sprintCompleted} color={C.green} />
+              <MiniStat label="LEFT" value={sprint.burndown[sprint.burndown.length - 1].remaining} color={C.orange} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Activity + upcoming */}
+      <div className="grid grid-cols-12 gap-4">
+        <div
+          className="col-span-12 lg:col-span-7 border"
+          style={{ borderColor: C.border, background: C.surface }}
+        >
+          <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: C.border }}>
+            <div className="font-cond font-bold tracking-wide">RECENT ACTIVITY</div>
+            <button
+              onClick={() => setView("tasks")}
+              className="font-mono-p text-[10px] tracking-wider flex items-center gap-1 hover:opacity-80"
+              style={{ color: C.cyan }}
+            >
+              ALL TASKS <ArrowRight size={11} />
+            </button>
+          </div>
+          <div className="divide-y" style={{ borderColor: C.border }}>
+            {tasks.slice(0, 6).map((t) => {
+              const st = subteamById(t.subteam);
+              const a = memberById(t.assignee);
+              return (
+                <div key={t.id} className="px-5 py-3 flex items-center gap-3" style={{ borderColor: C.border }}>
+                  <StatusDot status={t.status} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm truncate">{t.title}</div>
+                    <div className="font-mono-p text-[10px] mt-0.5" style={{ color: C.textMut }}>
+                      <span style={{ color: st?.color }}>{st?.name.toUpperCase()}</span>
+                      {" · "}{a?.name || "unassigned"}
+                      {t.files > 0 && <> · <FileUp size={9} className="inline" /> {t.files}</>}
+                    </div>
+                  </div>
+                  <PriorityPill priority={t.priority} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div
+          className="col-span-12 lg:col-span-5 border"
+          style={{ borderColor: C.border, background: C.surface }}
+        >
+          <div className="px-5 py-3 border-b" style={{ borderColor: C.border }}>
+            <div className="font-cond font-bold tracking-wide">UPCOMING</div>
+          </div>
+          <div className="p-5 space-y-3">
+            {comps
+              .filter((c) => c.status !== "completed")
+              .slice(0, 3)
+              .map((c) => (
+                <div
+                  key={c.id}
+                  className="border p-3 flex items-center gap-3"
+                  style={{ borderColor: C.border }}
+                >
+                  <div
+                    className="w-12 h-12 flex flex-col items-center justify-center"
+                    style={{ background: C.bgAlt, borderLeft: `2px solid ${C.orange}` }}
+                  >
+                    <div className="font-mono-p text-[9px]" style={{ color: C.textMut }}>
+                      {new Date(c.date).toLocaleString("en-US", { month: "short" }).toUpperCase()}
+                    </div>
+                    <div className="font-cond font-bold tabular-nums">
+                      {new Date(c.date).getDate()}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{c.name}</div>
+                    <div className="font-mono-p text-[10px]" style={{ color: C.textMut }}>
+                      {c.location}
+                    </div>
+                  </div>
+                  <CompStatusBadge status={c.status} />
+                </div>
+              ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ----- Overview subcomponents -----
+function StatCard({ label, value, sub, accent, icon: Icon }) {
+  return (
+    <div
+      className="border p-4 relative overflow-hidden"
+      style={{ borderColor: C.border, background: C.surface }}
+    >
+      <div className="absolute top-3 right-3 opacity-30">
+        <Icon size={28} color={accent} strokeWidth={1.5} />
+      </div>
+      <div className="font-mono-p text-[10px] tracking-widest" style={{ color: C.textMut }}>
+        {label}
+      </div>
+      <div className="font-cond text-3xl font-bold mt-1 tabular-nums" style={{ color: accent }}>
+        {value}
+      </div>
+      <div className="font-mono-p text-[10px] mt-1" style={{ color: C.textMut }}>
+        {sub}
+      </div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value, color }) {
+  return (
+    <div className="text-center">
+      <div className="font-mono-p text-[9px] tracking-widest" style={{ color: C.textMut }}>
+        {label}
+      </div>
+      <div className="font-cond text-xl font-bold tabular-nums mt-0.5" style={{ color }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function PriorityPill({ priority }) {
+  const map = {
+    high: { label: "HIGH", color: C.red,    bg: "#3A1818" },
+    med:  { label: "MED",  color: C.amber,  bg: "#3A2E12" },
+    low:  { label: "LOW",  color: C.textMut,bg: C.bgAlt   },
+  };
+  const p = map[priority] || map.low;
+  return (
+    <span
+      className="font-mono-p text-[9px] px-1.5 py-0.5 tracking-wider"
+      style={{ background: p.bg, color: p.color }}
+    >
+      {p.label}
+    </span>
+  );
+}
+
+function StatusDot({ status }) {
+  const map = {
+    backlog:  C.textMut,
+    progress: C.amber,
+    review:   C.cyan,
+    done:     C.green,
+  };
+  return (
+    <div
+      className="w-2 h-2 rounded-full flex-shrink-0"
+      style={{ background: map[status] || C.textMut }}
+    />
+  );
+}
+
+function CompStatusBadge({ status }) {
+  const map = {
+    registered: { label: "REGISTERED", color: C.green,  bg: "#143324" },
+    pending:    { label: "PENDING",    color: C.amber,  bg: "#3A2E12" },
+    upcoming:   { label: "UPCOMING",   color: C.cyan,   bg: "#0F2B31" },
+    completed:  { label: "COMPLETED",  color: C.textMut,bg: C.bgAlt   },
+  };
+  const s = map[status] || map.upcoming;
+  return (
+    <span
+      className="font-mono-p text-[9px] px-2 py-0.5 tracking-wider whitespace-nowrap"
+      style={{ background: s.bg, color: s.color }}
+    >
+      {s.label}
+    </span>
+  );
+}
+
+function ReassignMenu({ candidates, onPick }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="font-mono-p text-[10px] tracking-wider px-2.5 py-1.5 border flex items-center gap-1 whitespace-nowrap"
+        style={{ borderColor: C.orange, color: C.orange, background: C.bg }}
+      >
+        <Shuffle size={11} /> REASSIGN
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div
+            className="absolute right-0 top-full mt-1 z-20 border min-w-[180px] max-h-60 overflow-y-auto hide-scroll"
+            style={{ background: C.surfaceUp, borderColor: C.borderHi }}
+          >
+            {candidates.length === 0 ? (
+              <div className="px-3 py-2 font-mono-p text-[11px]" style={{ color: C.textMut }}>
+                No available members in subteam
+              </div>
+            ) : (
+              candidates.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => { onPick(m.id); setOpen(false); }}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-black/20 flex items-center gap-2"
+                >
+                  <Avatar name={m.name} />
+                  <span>{m.name}</span>
+                  <span className="font-mono-p text-[9px] ml-auto" style={{ color: C.textMut }}>
+                    {m.role.toUpperCase()}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Avatar({ name, size = 22 }) {
+  const init = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+  const hash = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const colors = [C.orange, C.cyan, C.green, C.amber, C.purple];
+  const color = colors[hash % colors.length];
+  return (
+    <div
+      className="flex items-center justify-center font-mono-p font-bold flex-shrink-0"
+      style={{
+        width: size, height: size, fontSize: size * 0.4,
+        background: color + "22", color, border: `1px solid ${color}55`,
+      }}
+    >
+      {init}
+    </div>
+  );
+}
+
+function Burndown({ data }) {
+  const W = 400, H = 140, PAD_L = 22, PAD_R = 8, PAD_T = 8, PAD_B = 22;
+  const max = Math.max(...data.map((d) => Math.max(d.remaining, d.ideal)));
+  const xStep = (W - PAD_L - PAD_R) / (data.length - 1);
+  const y = (v) => PAD_T + (1 - v / max) * (H - PAD_T - PAD_B);
+  const x = (i) => PAD_L + i * xStep;
+  const pathIdeal = data.map((d, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(d.ideal)}`).join(" ");
+  const pathReal  = data.map((d, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(d.remaining)}`).join(" ");
+  const area      = `${pathReal} L ${x(data.length - 1)} ${H - PAD_B} L ${x(0)} ${H - PAD_B} Z`;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ maxHeight: 160 }}>
+      {[0, 0.25, 0.5, 0.75, 1].map((f) => (
+        <line
+          key={f}
+          x1={PAD_L} x2={W - PAD_R}
+          y1={PAD_T + f * (H - PAD_T - PAD_B)}
+          y2={PAD_T + f * (H - PAD_T - PAD_B)}
+          stroke={C.border} strokeWidth="1" strokeDasharray="2 3"
+        />
+      ))}
+      <path d={area} fill={C.orange} opacity="0.08" />
+      <path d={pathIdeal} fill="none" stroke={C.textDim} strokeWidth="1" strokeDasharray="3 3" />
+      <path d={pathReal} fill="none" stroke={C.orange} strokeWidth="2" />
+      {data.map((d, i) => (
+        <circle key={i} cx={x(i)} cy={y(d.remaining)} r="2.5" fill={C.orange} />
+      ))}
+      {data.map((d, i) =>
+        i % 2 === 0 ? (
+          <text
+            key={i} x={x(i)} y={H - 6}
+            textAnchor="middle" fontSize="8"
+            fill={C.textMut} fontFamily="IBM Plex Mono"
+          >
+            {d.day.split(" ")[1]}
+          </text>
+        ) : null
+      )}
+      <text x="4" y={PAD_T + 4} fontSize="8" fill={C.textMut} fontFamily="IBM Plex Mono">{max}</text>
+      <text x="4" y={H - PAD_B} fontSize="8" fill={C.textMut} fontFamily="IBM Plex Mono">0</text>
+    </svg>
+  );
+}
+function TasksPage({ tasks, members, memberById, subteamById, onMove, onReassign, user }) {
+  const [filterSubteam, setFilterSubteam] = useState("all");
+  const [filterAssignee, setFilterAssignee] = useState("all");
+  const [filterPriority, setFilterPriority] = useState("all");
+
+  const columns = [
+    { id: "backlog",  label: "BACKLOG",     color: C.textMut },
+    { id: "progress", label: "IN PROGRESS", color: C.amber   },
+    { id: "review",   label: "REVIEW",      color: C.cyan    },
+    { id: "done",     label: "DONE",        color: C.green   },
+  ];
+
+  const filtered = tasks.filter((t) => {
+    if (filterSubteam !== "all" && t.subteam !== filterSubteam) return false;
+    if (filterAssignee !== "all" && t.assignee !== filterAssignee) return false;
+    if (filterPriority !== "all" && t.priority !== filterPriority) return false;
+    return true;
+  });
+
+  const byCol = (id) => filtered.filter((t) => t.status === id);
+  const isStudent = user?.role === "student";
+
+  return (
+    <div>
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-3 mb-5">
+        <div>
+          <div className="font-cond text-3xl font-bold tracking-wide">TASKS</div>
+          <div className="font-mono-p text-[11px]" style={{ color: C.textMut }}>
+            {filtered.length} of {tasks.length} tasks · click status dots to move
+            {isStudent && (
+              <span style={{ color: C.amber }}> · students cannot sign off — push to REVIEW for mentor approval</span>
+            )}
+          </div>
+        </div>
+        <div className="flex-1" />
+        <Select
+          label="SUBTEAM"
+          value={filterSubteam}
+          onChange={setFilterSubteam}
+          options={[
+            { value: "all", label: "All subteams" },
+            ...SUBTEAMS.map((s) => ({ value: s.id, label: s.name })),
+          ]}
+        />
+        <Select
+          label="ASSIGNEE"
+          value={filterAssignee}
+          onChange={setFilterAssignee}
+          options={[
+            { value: "all", label: "All members" },
+            ...members.map((m) => ({ value: m.id, label: m.name })),
+          ]}
+        />
+        <Select
+          label="PRIORITY"
+          value={filterPriority}
+          onChange={setFilterPriority}
+          options={[
+            { value: "all",  label: "All" },
+            { value: "high", label: "High" },
+            { value: "med",  label: "Med" },
+            { value: "low",  label: "Low" },
+          ]}
+        />
+      </div>
+
+      {/* Kanban */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {columns.map((col) => {
+          const colTasks = byCol(col.id);
+          return (
+            <div
+              key={col.id}
+              className="border flex flex-col"
+              style={{ borderColor: C.border, background: C.surface, minHeight: 500 }}
+            >
+              <div
+                className="px-4 py-3 border-b flex items-center justify-between"
+                style={{ borderColor: C.border }}
+              >
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ background: col.color }}
+                  />
+                  <span className="font-mono-p text-[11px] tracking-widest">{col.label}</span>
+                  {col.id === "done" && isStudent && (
+                    <Lock size={10} color={C.textMut} />
+                  )}
+                </div>
+                <span
+                  className="font-mono-p text-[10px] px-1.5 py-0.5 tabular-nums"
+                  style={{ background: C.bgAlt, color: C.textMut }}
+                >
+                  {colTasks.length}
+                </span>
+              </div>
+              <div className="p-3 space-y-2 flex-1">
+                {colTasks.length === 0 ? (
+                  <div
+                    className="py-8 text-center font-mono-p text-[10px]"
+                    style={{ color: C.textDim }}
+                  >
+                    — empty —
+                  </div>
+                ) : (
+                  colTasks.map((t) => (
+                    <TaskCard
+                      key={t.id}
+                      task={t}
+                      columns={columns}
+                      members={members}
+                      memberById={memberById}
+                      subteamById={subteamById}
+                      onMove={onMove}
+                      onReassign={onReassign}
+                      user={user}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TaskCard({ task, columns, members, memberById, subteamById, onMove, onReassign, user }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
+  const st = subteamById(task.subteam);
+  const assignee = memberById(task.assignee);
+  const overdue = new Date(task.due) < new Date("2026-04-21") && task.status !== "done";
+  const sameSubteamMembers = members.filter((m) => m.subteam === task.subteam);
+  const canReassign = can(user, "task.reassign");
+  const canSignOff  = can(user, "task.signOff");
+  const canReopen   = can(user, "task.reopen");
+
+  // What columns can the user move THIS task to?
+  const allowedTargets = columns.filter((c) => {
+    if (c.id === task.status) return false;
+    if (c.id === "done" && !canSignOff) return false;            // sign-off gated
+    if (task.status === "done" && !canReopen) return false;      // can't move out of done
+    return true;
+  });
+
+  return (
+    <div
+      className="border p-3 relative"
+      style={{
+        borderColor: overdue ? C.red + "55" : C.border,
+        background: C.bgAlt,
+        borderLeft: `3px solid ${st?.color || C.textMut}`,
+      }}
+    >
+      <div className="flex items-start gap-2 mb-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="font-mono-p text-[9px] tracking-wider" style={{ color: st?.color }}>
+              {st?.name.toUpperCase()}
+            </span>
+            <PriorityPill priority={task.priority} />
+          </div>
+          <div className="text-sm leading-snug">{task.title}</div>
+        </div>
+        {allowedTargets.length > 0 ? (
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-1 opacity-60 hover:opacity-100"
+          >
+            <MoreHorizontal size={14} />
+          </button>
+        ) : (
+          <div className="p-1 opacity-30" title="No moves available for your role">
+            <Lock size={12} />
+          </div>
+        )}
+      </div>
+
+      {menuOpen && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+          <div
+            className="absolute right-2 top-9 z-20 border min-w-[160px]"
+            style={{ background: C.surfaceUp, borderColor: C.borderHi }}
+          >
+            <div className="font-mono-p text-[9px] tracking-widest px-3 py-1.5 border-b" style={{ color: C.textMut, borderColor: C.border }}>
+              MOVE TO
+            </div>
+            {allowedTargets.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => { onMove(task.id, c.id); setMenuOpen(false); }}
+                className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-black/20"
+              >
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: c.color }} />
+                {c.label}
+              </button>
+            ))}
+            {/* Show locked option for clarity */}
+            {!canSignOff && task.status !== "done" && (
+              <div className="px-3 py-2 text-xs flex items-center gap-2 opacity-50">
+                <Lock size={11} color={C.textMut} />
+                <span style={{ color: C.textMut }}>DONE — mentor only</span>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* footer */}
+      <div className="flex items-center gap-2 mt-3 pt-2 border-t" style={{ borderColor: C.border }}>
+        <button
+          onClick={() => canReassign && setAssignOpen(!assignOpen)}
+          disabled={!canReassign}
+          className="flex items-center gap-1.5 flex-1 min-w-0"
+          style={{ cursor: canReassign ? "pointer" : "default" }}
+          title={canReassign ? "Reassign" : "Reassign — mentor or captain only"}
+        >
+          {assignee ? (
+            <>
+              <Avatar name={assignee.name} size={18} />
+              <span className="text-xs truncate">{assignee.name.split(" ")[0]}</span>
+              {!assignee.present && (
+                <UserX size={11} color={C.red} />
+              )}
+              {!canReassign && <Lock size={9} color={C.textDim} />}
+            </>
+          ) : (
+            <>
+              <User size={14} color={C.textMut} />
+              <span className="text-xs" style={{ color: C.textMut }}>Unassigned</span>
+            </>
+          )}
+        </button>
+
+        <div className="flex items-center gap-2 font-mono-p text-[10px]" style={{ color: overdue ? C.red : C.textMut }}>
+          {task.files > 0 && <span className="flex items-center gap-0.5"><FileUp size={10} />{task.files}</span>}
+          <span className="flex items-center gap-0.5">
+            <Clock size={10} />
+            {new Date(task.due).toLocaleString("en-US", { month: "short", day: "numeric" })}
+          </span>
+          <span className="flex items-center gap-0.5">{task.sprintPts}pt</span>
+        </div>
+      </div>
+
+      {assignOpen && canReassign && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setAssignOpen(false)} />
+          <div
+            className="absolute left-2 top-full mt-1 z-20 border min-w-[200px] max-h-64 overflow-y-auto hide-scroll"
+            style={{ background: C.surfaceUp, borderColor: C.borderHi }}
+          >
+            <div className="font-mono-p text-[9px] tracking-widest px-3 py-1.5 border-b" style={{ color: C.textMut, borderColor: C.border }}>
+              REASSIGN TO
+            </div>
+            {sameSubteamMembers.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => { onReassign(task.id, m.id); setAssignOpen(false); }}
+                className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-black/20"
+                style={{ opacity: m.present ? 1 : 0.5 }}
+              >
+                <Avatar name={m.name} size={18} />
+                <span>{m.name}</span>
+                <span className="ml-auto flex items-center gap-1">
+                  {!m.present && <UserX size={10} color={C.red} />}
+                  {m.id === task.assignee && <Check size={11} color={C.green} />}
+                </span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Select({ label, value, onChange, options }) {
+  return (
+    <div className="relative">
+      <div className="font-mono-p text-[9px] tracking-widest mb-0.5" style={{ color: C.textMut }}>
+        {label}
+      </div>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="appearance-none font-mono-p text-xs pl-3 pr-7 py-1.5 border"
+          style={{ background: C.surface, borderColor: C.border, color: C.text }}
+        >
+          {options.map((o) => (
+            <option key={o.value} value={o.value} style={{ background: C.surface }}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          size={12}
+          className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+          color={C.textMut}
+        />
+      </div>
+    </div>
+  );
+}
+function SubteamsPage({ members, tasks, onToggleAttendance, user }) {
+  const [activeCat, setActiveCat] = useState("all");
+  const canToggle = can(user, "attendance.toggle");
+
+  const cats = [
+    { id: "all",         label: "ALL SUBTEAMS" },
+    { id: "technical",   label: "TECHNICAL" },
+    { id: "operations",  label: "OPERATIONS & BUSINESS" },
+    { id: "competition", label: "COMPETITION" },
+  ];
+
+  const filteredSubteams = SUBTEAMS.filter(
+    (s) => activeCat === "all" || s.category === activeCat
+  );
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex items-end justify-between mb-5 flex-wrap gap-4">
+        <div>
+          <div className="font-cond text-3xl font-bold tracking-wide">SUBTEAMS</div>
+          <div className="font-mono-p text-[11px]" style={{ color: C.textMut }}>
+            {members.length} members · {members.filter((m) => m.present).length} present today ·
+            {canToggle ? " click avatar to toggle attendance"
+                       : <span style={{ color: C.amber }}> view only — mentors mark attendance</span>}
+          </div>
+        </div>
+        <div className="flex border" style={{ borderColor: C.border }}>
+          {cats.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setActiveCat(c.id)}
+              className="px-3 py-2 font-mono-p text-[10px] tracking-widest transition-colors"
+              style={{
+                background: activeCat === c.id ? C.orange : "transparent",
+                color: activeCat === c.id ? C.bg : C.textMut,
+              }}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Category sections */}
+      {["technical", "operations", "competition"]
+        .filter((cat) => activeCat === "all" || activeCat === cat)
+        .map((cat) => {
+          const catSubteams = filteredSubteams.filter((s) => s.category === cat);
+          if (catSubteams.length === 0) return null;
+          const catLabel =
+            cat === "technical" ? "TECHNICAL · BUILDING THE ROBOT" :
+            cat === "operations" ? "OPERATIONS & BUSINESS · RUNNING THE TEAM" :
+            "COMPETITION · ON-FIELD ROLES";
+          return (
+            <div key={cat} className="mb-8">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="font-mono-p text-[10px] tracking-widest" style={{ color: C.textMut }}>
+                  {catLabel}
+                </div>
+                <div className="flex-1 h-px" style={{ background: C.border }} />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {catSubteams.map((s) => (
+                  <SubteamCard
+                    key={s.id}
+                    subteam={s}
+                    members={members.filter((m) => m.subteam === s.id)}
+                    tasks={tasks.filter((t) => t.subteam === s.id)}
+                    onToggleAttendance={onToggleAttendance}
+                    canToggle={canToggle}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+    </div>
+  );
+}
+
+function SubteamCard({ subteam, members, tasks, onToggleAttendance, canToggle }) {
+  const openTasks = tasks.filter((t) => t.status !== "done").length;
+  const doneTasks = tasks.filter((t) => t.status === "done").length;
+  const completion = tasks.length ? Math.round((doneTasks / tasks.length) * 100) : 0;
+  const present = members.filter((m) => m.present).length;
+  const lead = members.find((m) => m.role === "Lead") || members[0];
+
+  return (
+    <div
+      className="border"
+      style={{ borderColor: C.border, background: C.surface }}
+    >
+      {/* Header strip */}
+      <div
+        className="relative p-4 border-b"
+        style={{ borderColor: C.border, background: C.bgAlt }}
+      >
+        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: subteam.color }} />
+        <div className="flex items-start gap-3">
+          <div
+            className="w-10 h-10 flex items-center justify-center flex-shrink-0"
+            style={{ background: subteam.color + "22", border: `1px solid ${subteam.color}55` }}
+          >
+            <Ic name={subteam.icon} size={18} color={subteam.color} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-cond text-xl font-bold tracking-wide">
+              {subteam.name.toUpperCase()}
+            </div>
+            <div className="font-mono-p text-[10px]" style={{ color: C.textMut }}>
+              {subteam.blurb}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="font-mono-p text-[9px]" style={{ color: C.textMut }}>LEAD</div>
+            <div className="text-xs font-medium">{lead?.name.split(" ")[0]}</div>
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-3 mt-4">
+          <div>
+            <div className="font-mono-p text-[9px] tracking-wider" style={{ color: C.textMut }}>PRESENT</div>
+            <div className="font-cond text-lg font-bold tabular-nums">
+              {present}<span className="text-xs" style={{ color: C.textMut }}>/{members.length}</span>
+            </div>
+          </div>
+          <div>
+            <div className="font-mono-p text-[9px] tracking-wider" style={{ color: C.textMut }}>OPEN</div>
+            <div className="font-cond text-lg font-bold tabular-nums" style={{ color: C.amber }}>
+              {openTasks}
+            </div>
+          </div>
+          <div>
+            <div className="font-mono-p text-[9px] tracking-wider" style={{ color: C.textMut }}>DONE</div>
+            <div className="font-cond text-lg font-bold tabular-nums" style={{ color: C.green }}>
+              {completion}<span className="text-xs">%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Roster */}
+      <div className="p-4">
+        <div className="font-mono-p text-[9px] tracking-widest mb-2 flex items-center gap-1.5" style={{ color: C.textMut }}>
+          ROSTER {canToggle ? "— TAP TO TOGGLE ATTENDANCE" : (
+            <><Lock size={9} /> READ ONLY</>
+          )}
+        </div>
+        <div className="space-y-1">
+          {members.length === 0 ? (
+            <div className="font-mono-p text-[10px] py-3" style={{ color: C.textDim }}>
+              No members assigned
+            </div>
+          ) : (
+            members.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => canToggle && onToggleAttendance(m.id)}
+                disabled={!canToggle}
+                className="w-full flex items-center gap-2 py-1.5 px-2 transition-colors"
+                style={{
+                  background: m.present ? "transparent" : C.red + "11",
+                  opacity: m.present ? 1 : 0.7,
+                  cursor: canToggle ? "pointer" : "default",
+                }}
+                onMouseEnter={(e) => canToggle && (e.currentTarget.style.background = C.bgAlt)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = m.present ? "transparent" : C.red + "11")}
+              >
+                <Avatar name={m.name} size={24} />
+                <div className="flex-1 text-left">
+                  <div className="text-xs">{m.name}</div>
+                  <div className="font-mono-p text-[9px]" style={{ color: C.textMut }}>
+                    {m.role.toUpperCase()}
+                  </div>
+                </div>
+                {m.present ? (
+                  <div className="flex items-center gap-1 font-mono-p text-[9px]" style={{ color: C.green }}>
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: C.green }} />
+                    HERE
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 font-mono-p text-[9px]" style={{ color: C.red }}>
+                    <UserX size={11} />
+                    OUT
+                  </div>
+                )}
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+function BuildPage({ subsystems, onUpdate, overallProgress, user }) {
+  const [selected, setSelected] = useState(subsystems[0]?.id);
+  const active = subsystems.find((s) => s.id === selected) || subsystems[0];
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex items-end justify-between mb-5 flex-wrap gap-4">
+        <div>
+          <div className="font-cond text-3xl font-bold tracking-wide">ROBOT BUILD</div>
+          <div className="font-mono-p text-[11px]" style={{ color: C.textMut }}>
+            Overall completion {overallProgress}% · {subsystems.length} subsystems tracked
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            className="font-mono-p text-[10px] tracking-widest px-3 py-2 border flex items-center gap-1.5"
+            style={{ borderColor: C.border, color: C.textMut }}
+          >
+            <Download size={12} /> EXPORT REPORT
+          </button>
+          <button
+            className="font-mono-p text-[10px] tracking-widest px-3 py-2 flex items-center gap-1.5"
+            style={{ background: C.orange, color: C.bg }}
+          >
+            <Upload size={12} /> UPLOAD CAD / CAM
+          </button>
+        </div>
+      </div>
+
+      {/* Master progress strip */}
+      <div
+        className="border p-4 mb-5 relative overflow-hidden"
+        style={{ borderColor: C.border, background: C.surface }}
+      >
+        <div className="absolute inset-0 grid-bg opacity-30" />
+        <div className="relative">
+          <div className="flex items-baseline justify-between mb-2">
+            <div className="font-mono-p text-[10px] tracking-widest" style={{ color: C.textMut }}>
+              ROBOT OVERALL
+            </div>
+            <div className="font-cond text-2xl font-bold tabular-nums">{overallProgress}%</div>
+          </div>
+          <div className="h-2 relative" style={{ background: C.bgAlt }}>
+            <div
+              className="absolute inset-y-0 left-0"
+              style={{ width: `${overallProgress}%`, background: C.orange }}
+            />
+          </div>
+          <div className="flex flex-wrap gap-1 mt-3">
+            {subsystems.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setSelected(s.id)}
+                className="font-mono-p text-[10px] px-2 py-1 tracking-wider transition-colors"
+                style={{
+                  background: selected === s.id ? C.orange : C.bgAlt,
+                  color: selected === s.id ? C.bg : C.text,
+                }}
+              >
+                {s.name.toUpperCase()} {s.progress}%
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Two-col: subsystem list + detail */}
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-12 lg:col-span-5 border" style={{ borderColor: C.border, background: C.surface }}>
+          <div className="px-4 py-3 border-b flex items-center justify-between" style={{ borderColor: C.border }}>
+            <div className="font-cond font-bold tracking-wide">SUBSYSTEMS</div>
+            <span
+              className="font-mono-p text-[10px] px-1.5 py-0.5"
+              style={{ background: C.bgAlt, color: C.textMut }}
+            >
+              {subsystems.length}
+            </span>
+          </div>
+          <div className="divide-y" style={{ borderColor: C.border }}>
+            {subsystems.map((s) => {
+              const st = SUBTEAMS.find((x) => x.id === s.subteam);
+              const isActive = s.id === selected;
+              const tone = s.progress >= 70 ? C.green : s.progress >= 40 ? C.amber : C.red;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setSelected(s.id)}
+                  className="w-full text-left p-4 flex items-center gap-3 transition-colors"
+                  style={{
+                    background: isActive ? C.bgAlt : "transparent",
+                    borderColor: C.border,
+                    borderLeft: `3px solid ${isActive ? C.orange : "transparent"}`,
+                  }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="font-cond font-bold text-base tracking-wide">{s.name.toUpperCase()}</div>
+                      <span className="font-mono-p text-[9px]" style={{ color: st?.color }}>
+                        · {st?.name.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="h-1 relative mb-1.5" style={{ background: C.bgAlt }}>
+                      <div className="absolute inset-y-0 left-0" style={{ width: `${s.progress}%`, background: tone }} />
+                    </div>
+                    <div className="flex items-center gap-3 font-mono-p text-[10px]" style={{ color: C.textMut }}>
+                      <span className="flex items-center gap-1"><FileUp size={10} /> {s.files} file{s.files !== 1 ? "s" : ""}</span>
+                      <span style={{ color: tone }}>{s.progress}%</span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Detail panel */}
+        <div className="col-span-12 lg:col-span-7">
+          {active && (
+            <SubsystemDetail subsystem={active} onUpdate={onUpdate} user={user} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SubsystemDetail({ subsystem, onUpdate, user }) {
+  const canEdit = can(user, "build.editProgress");
+  const canUpload = can(user, "build.upload");
+  const [uploads, setUploads] = useState([
+    { name: `${subsystem.name.toLowerCase()}-assembly-v12.step`, type: "CAD", size: "4.2 MB", rev: "R12", date: "2026-04-19" },
+    { name: `${subsystem.name.toLowerCase()}-frame-v8.f3d`,       type: "CAD", size: "2.8 MB", rev: "R08", date: "2026-04-17" },
+    { name: `${subsystem.name.toLowerCase()}-plate-cam.nc`,       type: "CAM", size: "184 KB", rev: "R04", date: "2026-04-18" },
+  ]);
+  const [dragOver, setDragOver] = useState(false);
+  const [notes, setNotes] = useState(subsystem.notes);
+  const [prog, setProg] = useState(subsystem.progress);
+
+  useEffect(() => {
+    setNotes(subsystem.notes);
+    setProg(subsystem.progress);
+  }, [subsystem.id]);
+
+  const st = SUBTEAMS.find((x) => x.id === subsystem.subteam);
+  const tone = prog >= 70 ? C.green : prog >= 40 ? C.amber : C.red;
+
+  const simulateUpload = () => {
+    const kinds = ["CAD", "CAM", "DRAWING", "STL"];
+    const ext = ["step", "f3d", "nc", "stl", "pdf"];
+    setUploads((u) => [
+      {
+        name: `${subsystem.name.toLowerCase()}-new-${Date.now().toString().slice(-4)}.${ext[Math.floor(Math.random()*ext.length)]}`,
+        type: kinds[Math.floor(Math.random() * kinds.length)],
+        size: `${(Math.random() * 5 + 0.5).toFixed(1)} MB`,
+        rev: `R${String(u.length + 13).padStart(2, "0")}`,
+        date: "2026-04-21",
+      },
+      ...u,
+    ]);
+  };
+
+  return (
+    <div className="border" style={{ borderColor: C.border, background: C.surface }}>
+      {/* Header */}
+      <div className="px-5 py-4 border-b flex items-start justify-between gap-3" style={{ borderColor: C.border }}>
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-mono-p text-[10px] tracking-wider" style={{ color: st?.color }}>
+              {st?.name.toUpperCase()}
+            </span>
+          </div>
+          <div className="font-cond text-2xl font-bold tracking-wide">{subsystem.name.toUpperCase()}</div>
+        </div>
+        <div className="text-right">
+          <div className="font-mono-p text-[9px] tracking-wider" style={{ color: C.textMut }}>COMPLETION</div>
+          <div className="font-cond text-3xl font-bold tabular-nums" style={{ color: tone }}>
+            {prog}%
+          </div>
+        </div>
+      </div>
+
+      <div className="p-5 space-y-5">
+        {/* Progress slider */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-mono-p text-[10px] tracking-widest flex items-center gap-1.5" style={{ color: C.textMut }}>
+              PROGRESS {!canEdit && <Lock size={10} />}
+            </div>
+            {canEdit ? (
+              <button
+                onClick={() => onUpdate(subsystem.id, { progress: prog, notes })}
+                className="font-mono-p text-[10px] tracking-wider px-2 py-1 border"
+                style={{ borderColor: C.cyan, color: C.cyan }}
+              >
+                SAVE
+              </button>
+            ) : (
+              <span className="font-mono-p text-[10px] tracking-wider" style={{ color: C.textMut }}>
+                MENTOR ONLY
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={prog}
+              onChange={(e) => setProg(Number(e.target.value))}
+              disabled={!canEdit}
+              className="flex-1"
+              style={{ accentColor: tone, opacity: canEdit ? 1 : 0.4, cursor: canEdit ? "pointer" : "not-allowed" }}
+            />
+            <div className="font-cond text-xl font-bold tabular-nums w-12 text-right">{prog}%</div>
+          </div>
+          <div className="h-2 relative mt-2" style={{ background: C.bgAlt }}>
+            <div className="absolute inset-y-0 left-0" style={{ width: `${prog}%`, background: tone }} />
+          </div>
+        </div>
+
+        {/* Notes */}
+        <div>
+          <div className="font-mono-p text-[10px] tracking-widest mb-1.5 flex items-center gap-1.5" style={{ color: C.textMut }}>
+            BUILD NOTES {!canEdit && <Lock size={10} />}
+          </div>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={2}
+            readOnly={!canEdit}
+            className="w-full px-3 py-2 text-sm border resize-none font-sans-p"
+            style={{
+              background: C.bgAlt,
+              borderColor: C.border,
+              color: canEdit ? C.text : C.textMut,
+              cursor: canEdit ? "text" : "default",
+            }}
+          />
+        </div>
+
+        {/* Uploads */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-mono-p text-[10px] tracking-widest" style={{ color: C.textMut }}>
+              CAD / CAM FILES · {uploads.length}
+            </div>
+            <button
+              onClick={simulateUpload}
+              className="font-mono-p text-[10px] tracking-wider px-2 py-1 flex items-center gap-1"
+              style={{ background: C.orange, color: C.bg }}
+            >
+              <Plus size={11} /> UPLOAD
+            </button>
+          </div>
+
+          {/* Drop zone */}
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => { e.preventDefault(); setDragOver(false); simulateUpload(); }}
+            className="border-2 border-dashed p-4 text-center mb-3 transition-colors cursor-pointer"
+            style={{
+              borderColor: dragOver ? C.orange : C.border,
+              background: dragOver ? C.orange + "11" : "transparent",
+            }}
+            onClick={simulateUpload}
+          >
+            <Upload size={20} color={C.textMut} className="mx-auto mb-1" />
+            <div className="font-mono-p text-[11px]" style={{ color: C.textMut }}>
+              Drop .step / .f3d / .stl / .nc files · or click
+            </div>
+          </div>
+
+          {/* File list */}
+          <div className="space-y-1 max-h-56 overflow-y-auto hide-scroll">
+            {uploads.map((f, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2 px-3 py-2 border"
+                style={{ borderColor: C.border, background: C.bgAlt }}
+              >
+                <div
+                  className="w-8 h-8 flex items-center justify-center font-mono-p text-[9px] font-bold flex-shrink-0"
+                  style={{
+                    background: f.type === "CAD" ? C.cyan + "22" : f.type === "CAM" ? C.orange + "22" : C.purple + "22",
+                    color: f.type === "CAD" ? C.cyan : f.type === "CAM" ? C.orange : C.purple,
+                  }}
+                >
+                  {f.type}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs truncate font-mono-p">{f.name}</div>
+                  <div className="font-mono-p text-[9px]" style={{ color: C.textMut }}>
+                    {f.rev} · {f.size} · {f.date}
+                  </div>
+                </div>
+                <button className="p-1 opacity-60 hover:opacity-100">
+                  <Download size={13} color={C.textMut} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+function ScoutingPage({ members, onToggleAttendance }) {
+  // Mock match data
+  const matches = [
+    { m: "Q17", red: [2834, 971,  254],  blue: [1678, 2910, 118],  r: 142, b: 98,  w: "RED"  },
+    { m: "Q23", red: [1114, 2056, 148],  blue: [2834, 4613, 846],  r: 88,  b: 121, w: "BLUE" },
+    { m: "Q31", red: [2834, 604,  1323], blue: [1690, 3476, 973],  r: 156, b: 133, w: "RED"  },
+    { m: "Q42", red: [2073, 195,  1796], blue: [2834, 1538, 4481], r: 71,  b: 102, w: "BLUE" },
+    { m: "Q55", red: [2834, 3310, 67],   blue: [2486, 3539, 1529], r: 118, b: 94,  w: "RED"  },
+  ];
+  const teamRanks = [
+    { team: 254,  name: "The Cheesy Poofs", opr: 112.4, auto: 24.1, teleop: 68.3, wr: "11-1" },
+    { team: 1678, name: "Citrus Circuits",   opr: 108.7, auto: 22.5, teleop: 65.9, wr: "10-2" },
+    { team: 2834, name: "Bionic Barons (us)",opr:  92.3, auto: 18.2, teleop: 58.1, wr: "9-3"  },
+    { team: 971,  name: "Spartan Robotics", opr:  89.8, auto: 19.7, teleop: 54.6, wr: "8-4"  },
+    { team: 118,  name: "Robonauts",         opr:  88.1, auto: 17.3, teleop: 55.9, wr: "8-4"  },
+    { team: 1114, name: "Simbotics",         opr:  86.5, auto: 16.8, teleop: 54.4, wr: "7-5"  },
+  ];
+
+  const scoutTeam = members.filter((m) => m.subteam === "scout");
+  const driveTeam = members.filter((m) => m.subteam === "drive");
+
+  return (
+    <div>
+      <div className="flex items-end justify-between mb-5 flex-wrap gap-4">
+        <div>
+          <div className="font-cond text-3xl font-bold tracking-wide">SCOUTING</div>
+          <div className="font-mono-p text-[11px]" style={{ color: C.textMut }}>
+            Sacramento Regional · 12 matches scouted · {scoutTeam.filter((m) => m.present).length}/{scoutTeam.length} scouts present
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 font-mono-p text-[10px] tracking-wider border"
+            style={{ borderColor: C.border, color: C.green }}
+          >
+            <span className="pulse-dot w-1.5 h-1.5 rounded-full" style={{ background: C.green }} />
+            LIVE SYNC · TBA
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-12 gap-4">
+        {/* Match history */}
+        <div className="col-span-12 xl:col-span-7 border" style={{ borderColor: C.border, background: C.surface }}>
+          <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: C.border }}>
+            <div className="font-cond font-bold tracking-wide">RECENT MATCHES</div>
+            <span className="font-mono-p text-[10px]" style={{ color: C.textMut }}>
+              TEAM 2834 · SACRAMENTO REG.
+            </span>
+          </div>
+          <div className="divide-y" style={{ borderColor: C.border }}>
+            {matches.map((m) => {
+              const weWon = (m.red.includes(2834) && m.w === "RED") || (m.blue.includes(2834) && m.w === "BLUE");
+              return (
+                <div key={m.m} className="px-5 py-3 flex items-center gap-3">
+                  <div className="font-mono-p font-bold w-10">{m.m}</div>
+                  <div className="flex-1 grid grid-cols-2 gap-3 text-xs">
+                    <div className="flex items-center gap-1.5 font-mono-p">
+                      <span className="w-1 h-4" style={{ background: C.red }} />
+                      {m.red.map((t, ti) => (
+                        <React.Fragment key={t}>
+                          {ti > 0 && <span style={{ color: C.textDim }}>·</span>}
+                          <span style={{ fontWeight: t === 2834 ? 700 : 400, color: t === 2834 ? C.orange : C.text }}>
+                            {t}
+                          </span>
+                        </React.Fragment>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-1.5 font-mono-p">
+                      <span className="w-1 h-4" style={{ background: C.cyan }} />
+                      {m.blue.map((t, ti) => (
+                        <React.Fragment key={t}>
+                          {ti > 0 && <span style={{ color: C.textDim }}>·</span>}
+                          <span style={{ fontWeight: t === 2834 ? 700 : 400, color: t === 2834 ? C.orange : C.text }}>
+                            {t}
+                          </span>
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="font-mono-p text-xs tabular-nums w-20 text-right">
+                    <span style={{ color: C.red }}>{m.r}</span>
+                    <span style={{ color: C.textMut }}> · </span>
+                    <span style={{ color: C.cyan }}>{m.b}</span>
+                  </div>
+                  <div
+                    className="font-mono-p text-[9px] px-1.5 py-0.5 tracking-wider w-10 text-center"
+                    style={{
+                      background: weWon ? C.green + "22" : C.red + "22",
+                      color: weWon ? C.green : C.red,
+                    }}
+                  >
+                    {weWon ? "W" : "L"}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Team rankings */}
+        <div className="col-span-12 xl:col-span-5 border" style={{ borderColor: C.border, background: C.surface }}>
+          <div className="px-5 py-3 border-b" style={{ borderColor: C.border }}>
+            <div className="font-cond font-bold tracking-wide">ALLIANCE PICK LIST · LIVE</div>
+          </div>
+          <div className="p-3">
+            <div className="grid grid-cols-12 font-mono-p text-[9px] tracking-widest px-2 pb-2" style={{ color: C.textMut }}>
+              <div className="col-span-1">#</div>
+              <div className="col-span-5">TEAM</div>
+              <div className="col-span-2 text-right">OPR</div>
+              <div className="col-span-2 text-right">AUTO</div>
+              <div className="col-span-2 text-right">W-L</div>
+            </div>
+            <div className="space-y-1">
+              {teamRanks.map((t, i) => {
+                const isUs = t.team === 2834;
+                return (
+                  <div
+                    key={t.team}
+                    className="grid grid-cols-12 items-center px-2 py-1.5 text-xs"
+                    style={{ background: isUs ? C.orange + "15" : "transparent" }}
+                  >
+                    <div className="col-span-1 font-cond font-bold tabular-nums" style={{ color: i < 3 ? C.green : C.textMut }}>
+                      {i + 1}
+                    </div>
+                    <div className="col-span-5 min-w-0 truncate">
+                      <span className="font-mono-p tabular-nums" style={{ color: isUs ? C.orange : C.text, fontWeight: isUs ? 700 : 500 }}>
+                        {t.team}
+                      </span>
+                      <span className="ml-2" style={{ color: C.textMut }}>{t.name}</span>
+                    </div>
+                    <div className="col-span-2 text-right font-mono-p tabular-nums">{t.opr}</div>
+                    <div className="col-span-2 text-right font-mono-p tabular-nums" style={{ color: C.textMut }}>{t.auto}</div>
+                    <div className="col-span-2 text-right font-mono-p tabular-nums" style={{ color: C.textMut }}>{t.wr}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Scout + Drive team attendance */}
+        <div className="col-span-12 lg:col-span-6 border" style={{ borderColor: C.border, background: C.surface }}>
+          <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: C.border }}>
+            <div className="font-cond font-bold tracking-wide">SCOUTING SHIFT · TODAY</div>
+            <span className="font-mono-p text-[10px]" style={{ color: C.green }}>
+              {scoutTeam.filter((m) => m.present).length}/{scoutTeam.length} ON STAND
+            </span>
+          </div>
+          <div className="p-4 grid grid-cols-2 gap-2">
+            {scoutTeam.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => onToggleAttendance(m.id)}
+                className="flex items-center gap-2 p-2 border"
+                style={{
+                  borderColor: m.present ? C.green + "55" : C.red + "55",
+                  background: m.present ? C.green + "11" : C.red + "11",
+                }}
+              >
+                <Avatar name={m.name} size={24} />
+                <div className="flex-1 text-left min-w-0">
+                  <div className="text-xs truncate">{m.name.split(" ")[0]}</div>
+                  <div className="font-mono-p text-[9px]" style={{ color: C.textMut }}>
+                    {m.role.toUpperCase()}
+                  </div>
+                </div>
+                {m.present ? <Check size={13} color={C.green} /> : <X size={13} color={C.red} />}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="col-span-12 lg:col-span-6 border" style={{ borderColor: C.border, background: C.surface }}>
+          <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: C.border }}>
+            <div className="font-cond font-bold tracking-wide">DRIVE TEAM · READY STATE</div>
+            <span className="font-mono-p text-[10px]" style={{ color: C.green }}>
+              {driveTeam.filter((m) => m.present).length}/{driveTeam.length} READY
+            </span>
+          </div>
+          <div className="p-4 space-y-1.5">
+            {driveTeam.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => onToggleAttendance(m.id)}
+                className="w-full flex items-center gap-3 p-2 border text-left"
+                style={{
+                  borderColor: m.present ? C.border : C.red + "55",
+                  background: m.present ? C.bgAlt : C.red + "11",
+                }}
+              >
+                <div
+                  className="font-mono-p text-[10px] tracking-wider px-2 py-1"
+                  style={{ background: C.red, color: C.text, fontWeight: 700 }}
+                >
+                  {m.role.toUpperCase()}
+                </div>
+                <Avatar name={m.name} size={22} />
+                <div className="flex-1 text-sm">{m.name}</div>
+                {m.present ? (
+                  <span className="font-mono-p text-[9px]" style={{ color: C.green }}>● READY</span>
+                ) : (
+                  <span className="font-mono-p text-[9px]" style={{ color: C.red }}>● OUT</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+function CompetitionsPage({ comps, onUpdate, user }) {
+  const statusOptions = ["registered", "pending", "upcoming", "completed"];
+  const canRegister = can(user, "comp.register");
+  const canStatus = can(user, "comp.updateStatus");
+
+  const seasonStats = {
+    events: comps.filter((c) => c.status === "completed").length,
+    bestRank: Math.min(...comps.filter((c) => c.rank).map((c) => c.rank)),
+    avgRank: Math.round(
+      comps.filter((c) => c.rank).reduce((a, c) => a + c.rank, 0) /
+        comps.filter((c) => c.rank).length
+    ),
+  };
+
+  return (
+    <div>
+      <div className="flex items-end justify-between mb-5 flex-wrap gap-4">
+        <div>
+          <div className="font-cond text-3xl font-bold tracking-wide">COMPETITIONS</div>
+          <div className="font-mono-p text-[11px]" style={{ color: C.textMut }}>
+            2026 REEFSCAPE season · registrations & results
+          </div>
+        </div>
+        {canRegister ? (
+          <button
+            className="font-mono-p text-[10px] tracking-widest px-3 py-2 flex items-center gap-1.5"
+            style={{ background: C.orange, color: C.bg }}
+          >
+            <Plus size={12} /> REGISTER FOR EVENT
+          </button>
+        ) : (
+          <div
+            className="font-mono-p text-[10px] tracking-widest px-3 py-2 flex items-center gap-1.5 border"
+            style={{ borderColor: C.border, color: C.textMut }}
+            title="Only captains can register the team for new events"
+          >
+            <Lock size={11} /> CAPTAIN-ONLY ACTION
+          </div>
+        )}
+      </div>
+
+      {/* Season stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+        <StatCard label="EVENTS PLAYED" value={seasonStats.events}       sub="this season"      accent={C.cyan}   icon={Flag} />
+        <StatCard label="BEST RANK"     value={`#${seasonStats.bestRank}`} sub="Sacramento Reg." accent={C.green}  icon={Trophy} />
+        <StatCard label="AVG RANK"      value={`#${seasonStats.avgRank}`}  sub={`of ~40 teams`}  accent={C.amber}  icon={TrendingUp} />
+        <StatCard label="AWARDS"        value="3"                          sub="Impact · Gracious · Innovation" accent={C.purple} icon={Award} />
+      </div>
+
+      {/* Event table */}
+      <div className="border" style={{ borderColor: C.border, background: C.surface }}>
+        <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: C.border }}>
+          <div className="font-cond font-bold tracking-wide">EVENT SCHEDULE</div>
+          <div className="flex items-center gap-2">
+            {["registered", "pending", "upcoming", "completed"].map((s) => (
+              <div key={s} className="flex items-center gap-1">
+                <CompStatusBadge status={s} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="divide-y" style={{ borderColor: C.border }}>
+          {comps
+            .sort((a, b) => new Date(a.date) - new Date(b.date))
+            .map((c) => {
+              const date = new Date(c.date);
+              const daysAway = Math.ceil((date - new Date("2026-04-21")) / 86400000);
+              const upcoming = daysAway > 0 && c.status !== "completed";
+              return (
+                <div key={c.id} className="px-5 py-4 flex items-center gap-4">
+                  {/* Date block */}
+                  <div
+                    className="w-16 flex flex-col items-center justify-center py-2 flex-shrink-0"
+                    style={{
+                      background: C.bgAlt,
+                      borderLeft: `3px solid ${upcoming ? C.orange : C.textDim}`,
+                    }}
+                  >
+                    <div className="font-mono-p text-[9px]" style={{ color: C.textMut }}>
+                      {date.toLocaleString("en-US", { month: "short" }).toUpperCase()}
+                    </div>
+                    <div className="font-cond text-2xl font-bold tabular-nums leading-none">
+                      {date.getDate()}
+                    </div>
+                    <div className="font-mono-p text-[9px] mt-0.5" style={{ color: C.textMut }}>
+                      {date.getFullYear()}
+                    </div>
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-cond text-lg font-bold tracking-wide">
+                      {c.name.toUpperCase()}
+                    </div>
+                    <div className="font-mono-p text-[11px] mt-0.5" style={{ color: C.textMut }}>
+                      {c.location}
+                      {upcoming && (
+                        <span className="ml-2" style={{ color: C.orange }}>· T−{daysAway}d</span>
+                      )}
+                      {c.rank && (
+                        <span className="ml-2" style={{ color: C.green }}>· Finished #{c.rank}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status dropdown */}
+                  <div className="flex items-center gap-2">
+                    <CompStatusBadge status={c.status} />
+                    {canStatus ? (
+                      <select
+                        value={c.status}
+                        onChange={(e) => onUpdate(c.id, e.target.value)}
+                        className="appearance-none font-mono-p text-[10px] tracking-widest px-2 py-1 border cursor-pointer"
+                        style={{ background: C.bg, borderColor: C.border, color: C.text }}
+                      >
+                        {statusOptions.map((s) => (
+                          <option key={s} value={s}>{s.toUpperCase()}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <Lock size={11} color={C.textDim} />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      </div>
+
+      {/* Registration form preview */}
+      {canRegister ? (
+        <div
+          className="border mt-5 p-5 relative overflow-hidden"
+          style={{ borderColor: C.border, background: C.surface }}
+        >
+          <div className="absolute inset-0 grid-bg opacity-30" />
+          <div className="relative">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <div className="font-mono-p text-[10px] tracking-widest" style={{ color: C.textMut }}>
+                  QUICK-REGISTER — FRC EVENTS API
+                </div>
+                <div className="font-cond text-xl font-bold tracking-wide mt-1">
+                  ADD NEW COMPETITION
+                </div>
+              </div>
+              <div className="font-mono-p text-[10px] px-2 py-1" style={{ background: C.amber + "22", color: C.amber }}>
+                REQUIRES FRC EVENTS CONNECTION
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <div className="font-mono-p text-[10px] tracking-wider mb-1" style={{ color: C.textMut }}>EVENT CODE</div>
+                <input
+                  placeholder="e.g. CASD or CHCMP"
+                  className="w-full px-3 py-2 text-sm border font-mono-p"
+                  style={{ background: C.bgAlt, borderColor: C.border, color: C.text }}
+                />
+              </div>
+              <div>
+                <div className="font-mono-p text-[10px] tracking-wider mb-1" style={{ color: C.textMut }}>TEAM NUMBER</div>
+                <input
+                  defaultValue={user?.teamNumber || "2834"}
+                  className="w-full px-3 py-2 text-sm border font-mono-p"
+                  style={{ background: C.bgAlt, borderColor: C.border, color: C.text }}
+                />
+              </div>
+            </div>
+            <button
+              className="font-mono-p text-[11px] tracking-widest px-4 py-2 mt-3 flex items-center gap-1.5"
+              style={{ background: C.orange, color: C.bg }}
+            >
+              <Radio size={13} /> LOOKUP & REGISTER
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div
+          className="border mt-5 p-6 text-center relative overflow-hidden"
+          style={{ borderColor: C.border, background: C.surface }}
+        >
+          <div className="absolute inset-0 grid-bg opacity-20" />
+          <div className="relative flex flex-col items-center gap-2">
+            <div
+              className="w-10 h-10 flex items-center justify-center"
+              style={{ background: C.bgAlt, border: `1px solid ${C.border}` }}
+            >
+              <Crown size={18} color={C.orange} />
+            </div>
+            <div className="font-cond text-lg font-bold tracking-wide">CAPTAIN-LEVEL ACCESS REQUIRED</div>
+            <div className="font-mono-p text-[11px] max-w-md" style={{ color: C.textMut }}>
+              Registering the team for new competitions is restricted to captains.
+              Ask your captain to add the next event, or sign in with captain credentials.
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function IntegrationsPage({ integrations, onToggle, user }) {
+  const connected = integrations.filter((i) => i.connected);
+  const available = integrations.filter((i) => !i.connected);
+  const canToggleInt = can(user, "integration.toggle");
+  const canMessage = can(user, "message.send");
+
+  const featured = [
+    {
+      id: "slack",
+      name: "#build-updates activity",
+      lines: [
+        { user: "Kai",  time: "09:42", msg: "Pushed auto path #3 refinement — Shooter timing +40ms" },
+        { user: "Ava",  time: "10:15", msg: "Elevator bracket v4 checked in to Onshape" },
+        { user: "Bot",  time: "10:16", msg: "✓ Task #t2 moved to REVIEW by Jordan" },
+        { user: "Riya", time: "10:31", msg: "Waiting on CAN ID assignment from Kai — blocking pneumatics test" },
+      ],
+    },
+  ];
+
+  return (
+    <div>
+      <div className="flex items-end justify-between mb-5 flex-wrap gap-4">
+        <div>
+          <div className="font-cond text-3xl font-bold tracking-wide">INTEGRATIONS</div>
+          <div className="font-mono-p text-[11px]" style={{ color: C.textMut }}>
+            {connected.length} of {integrations.length} services connected · toggle to enable
+          </div>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 font-mono-p text-[10px] tracking-wider border" style={{ borderColor: C.green, color: C.green }}>
+          <Wifi size={12} />
+          ALL SYSTEMS NOMINAL
+        </div>
+      </div>
+
+      {/* Featured: Slack-like live feed */}
+      <div className="grid grid-cols-12 gap-4 mb-5">
+        <div className="col-span-12 xl:col-span-7 border" style={{ borderColor: C.border, background: C.surface }}>
+          <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: C.border }}>
+            <div className="flex items-center gap-2">
+              <Slack size={15} color={C.orange} />
+              <div className="font-cond font-bold tracking-wide">SLACK · #build-updates</div>
+            </div>
+            <span className="font-mono-p text-[10px] px-1.5 py-0.5" style={{ background: C.green + "22", color: C.green }}>
+              LIVE
+            </span>
+          </div>
+          <div className="divide-y" style={{ borderColor: C.border }}>
+            {featured[0].lines.map((l, i) => (
+              <div key={i} className="px-5 py-3 flex items-start gap-3">
+                <div className="font-mono-p text-[10px] tabular-nums w-10 pt-1" style={{ color: C.textDim }}>
+                  {l.time}
+                </div>
+                {l.user === "Bot" ? (
+                  <div
+                    className="w-7 h-7 flex items-center justify-center flex-shrink-0"
+                    style={{ background: C.orange, color: C.bg }}
+                  >
+                    <Bot size={14} />
+                  </div>
+                ) : (
+                  <Avatar name={l.user} size={28} />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="font-cond font-bold text-sm mb-0.5">{l.user === "Bot" ? "PIT HQ Bot" : l.user}</div>
+                  <div className="text-sm" style={{ color: l.user === "Bot" ? C.cyan : C.text }}>
+                    {l.msg}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="px-5 py-3 border-t flex items-center gap-2" style={{ borderColor: C.border, background: C.bgAlt }}>
+            <MessageSquare size={13} color={C.textMut} />
+            <input
+              placeholder="Post an update to #build-updates…"
+              className="flex-1 bg-transparent text-xs font-sans-p"
+              style={{ color: C.text, outline: "none" }}
+            />
+            <button className="font-mono-p text-[10px] tracking-wider px-2 py-1" style={{ background: C.orange, color: C.bg }}>
+              SEND
+            </button>
+          </div>
+        </div>
+
+        {/* Onshape + GitHub live widgets */}
+        <div className="col-span-12 xl:col-span-5 space-y-4">
+          <div className="border" style={{ borderColor: C.border, background: C.surface }}>
+            <div className="px-5 py-3 border-b flex items-center gap-2" style={{ borderColor: C.border }}>
+              <Box size={15} color={C.cyan} />
+              <div className="font-cond font-bold tracking-wide">ONSHAPE · LATEST REVS</div>
+            </div>
+            <div className="divide-y" style={{ borderColor: C.border }}>
+              {[
+                { part: "Elevator-Assembly", rev: "v12", user: "Ava",   t: "8m ago" },
+                { part: "Shooter-Flywheel",  rev: "v7",  user: "Priya", t: "1h ago" },
+                { part: "Drivetrain-Frame",  rev: "v4",  user: "Jordan",t: "3h ago" },
+              ].map((r, i) => (
+                <div key={i} className="px-5 py-2.5 flex items-center gap-3 text-xs">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-mono-p truncate">{r.part}</div>
+                    <div className="font-mono-p text-[9px]" style={{ color: C.textMut }}>
+                      {r.user} · {r.t}
+                    </div>
+                  </div>
+                  <span className="font-mono-p text-[10px] px-1.5 py-0.5" style={{ background: C.cyan + "22", color: C.cyan }}>
+                    {r.rev}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="border" style={{ borderColor: C.border, background: C.surface }}>
+            <div className="px-5 py-3 border-b flex items-center gap-2" style={{ borderColor: C.border }}>
+              <GitBranch size={15} color={C.green} />
+              <div className="font-cond font-bold tracking-wide">GITHUB · MAIN</div>
+            </div>
+            <div className="divide-y" style={{ borderColor: C.border }}>
+              {[
+                { msg: "feat(auto): tune path #3 timing",  sha: "a8c4e1", user: "Kai" },
+                { msg: "fix(vision): null guard on pose",  sha: "b3f9d0", user: "Ben" },
+                { msg: "refactor(subsystems/intake)",      sha: "7e1b22", user: "Kai" },
+              ].map((c, i) => (
+                <div key={i} className="px-5 py-2.5 flex items-center gap-3 text-xs">
+                  <Hash size={11} color={C.textMut} />
+                  <div className="flex-1 min-w-0 truncate">{c.msg}</div>
+                  <span className="font-mono-p text-[10px]" style={{ color: C.textMut }}>
+                    {c.sha} · {c.user}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* All integrations grid */}
+      <div className="font-mono-p text-[10px] tracking-widest mb-2" style={{ color: C.textMut }}>
+        ALL SERVICES
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        {integrations.map((i) => (
+          <IntegrationTile key={i.id} integration={i} onToggle={onToggle} canToggle={canToggleInt} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function IntegrationTile({ integration, onToggle, canToggle }) {
+  return (
+    <div
+      className="border p-4 relative"
+      style={{
+        borderColor: integration.connected ? C.green + "55" : C.border,
+        background: C.surface,
+      }}
+    >
+      {integration.connected && (
+        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: C.green }} />
+      )}
+      <div className="flex items-start justify-between mb-3">
+        <div
+          className="w-10 h-10 flex items-center justify-center"
+          style={{
+            background: integration.connected ? C.green + "22" : C.bgAlt,
+            border: `1px solid ${integration.connected ? C.green + "55" : C.border}`,
+          }}
+        >
+          <Ic name={integration.icon} size={18} color={integration.connected ? C.green : C.textMut} />
+        </div>
+        {integration.connected ? (
+          <span className="font-mono-p text-[9px] px-1.5 py-0.5 tracking-wider" style={{ background: C.green + "22", color: C.green }}>
+            CONNECTED
+          </span>
+        ) : (
+          <span className="font-mono-p text-[9px] px-1.5 py-0.5 tracking-wider" style={{ background: C.bgAlt, color: C.textMut }}>
+            AVAILABLE
+          </span>
+        )}
+      </div>
+      <div className="font-cond text-base font-bold tracking-wide mb-1">
+        {integration.name.toUpperCase()}
+      </div>
+      <div className="text-xs mb-4" style={{ color: C.textMut }}>
+        {integration.desc}
+      </div>
+      {canToggle ? (
+        <button
+          onClick={() => onToggle(integration.id)}
+          className="w-full font-mono-p text-[10px] tracking-widest py-2 border transition-colors"
+          style={{
+            borderColor: integration.connected ? C.red : C.orange,
+            color: integration.connected ? C.red : C.orange,
+          }}
+        >
+          {integration.connected ? "DISCONNECT" : "CONNECT"}
+        </button>
+      ) : (
+        <div
+          className="w-full font-mono-p text-[10px] tracking-widest py-2 border flex items-center justify-center gap-1.5"
+          style={{ borderColor: C.border, color: C.textMut }}
+          title="Connecting and disconnecting integrations is restricted to captains"
+        >
+          <Lock size={11} /> CAPTAIN ONLY
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+
+createRoot(document.getElementById("root")).render(<FRCHQ />);
+</script>
+</body>
+</html>
