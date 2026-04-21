@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>FRC Team Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090e;--s1:#0d1018;--s2:#121620;--s3:#181d28;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --text:#dde3f0;--muted:#5a6478;--muted2:#8896b0;
+  --red:#e63946;--blue:#3a86ff;--teal:#06d6a0;--yellow:#ffd60a;
+  --orange:#fb5607;--purple:#8338ec;--pink:#ff006e;--cyan:#00b4d8;--green:#4ade80;
+  --mechanical:#fb5607;--design:#3a86ff;--electrical:#ffd60a;--software:#e63946;
+  --business:#8338ec;--outreach:#00b4d8;--media:#ff006e;--awards:#ffd60a;
+  --driveteam:#4ade80;--scouting:#06d6a0;
+  --r:5px;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+
+/* ══ TOPBAR ══ */
+.topbar{
+  height:52px;background:var(--s1);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.25rem;flex-shrink:0;z-index:200;gap:.75rem;
+}
+.t-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;letter-spacing:.02em;color:var(--red);white-space:nowrap}
+.t-logo span{color:var(--text)}
+.t-sprint{
+  display:flex;align-items:center;gap:.5rem;background:rgba(230,57,70,.1);
+  border:1px solid rgba(230,57,70,.25);border-radius:var(--r);
+  padding:.25rem .75rem;cursor:pointer;
+}
+.t-sprint-name{font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;color:var(--red);letter-spacing:.05em}
+.t-sprint-days{font-size:.65rem;color:var(--muted2);margin-left:.25rem}
+.t-right{display:flex;align-items:center;gap:.5rem}
+.t-btn{
+  background:var(--s2);border:1px solid var(--border);color:var(--muted2);
+  font-size:.68rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;
+  padding:.3rem .7rem;border-radius:var(--r);cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.t-btn:hover{color:var(--text);border-color:var(--border2)}
+.t-btn.primary{background:var(--red);color:#fff;border-color:var(--red)}
+.t-btn.primary:hover{background:#c1121f}
+.robot-progress-wrap{display:flex;align-items:center;gap:.6rem}
+.robot-pct-label{font-size:.65rem;color:var(--muted2);white-space:nowrap}
+.robot-bar{width:120px;height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+.robot-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));border-radius:3px;transition:width .5s ease}
+.robot-pct{font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;color:var(--teal);white-space:nowrap}
+
+/* ══ SHELL ══ */
+.shell{display:flex;flex:1;overflow:hidden}
+
+/* ══ SIDEBAR ══ */
+.sidebar{
+  width:200px;background:var(--s1);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;
+}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.nav-section{padding:.75rem .75rem .25rem;font-size:.58rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.nav-item{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.5rem .75rem;border-radius:var(--r);margin:1px .4rem;
+  cursor:pointer;font-size:.8rem;font-weight:500;color:var(--muted2);
+  transition:all .15s;position:relative;
+}
+.nav-item .ni-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.nav-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.nav-item.active{background:rgba(230,57,70,.1);color:var(--text)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2px;background:var(--red);border-radius:0 2px 2px 0}
+.nav-badge{
+  margin-left:auto;font-size:.58rem;font-weight:700;
+  background:rgba(255,255,255,.08);border-radius:10px;
+  padding:.1rem .4rem;color:var(--muted2);
+}
+
+/* ══ MAIN ══ */
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.page{display:none;flex:1;overflow-y:auto;padding:1.5rem}
+.page.active{display:flex;flex-direction:column}
+.page::-webkit-scrollbar{width:4px}
+.page::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ══ PAGE HEADER ══ */
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap}
+.page-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem;letter-spacing:-.01em}
+.page-sub{font-size:.8rem;color:var(--muted2);margin-top:.2rem}
+.page-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+
+/* ══ GRID UTILS ══ */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}
+@media(max-width:900px){.grid-3{grid-template-columns:1fr 1fr}.grid-4{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+
+/* ══ CARDS ══ */
+.card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:1rem}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem}
+.card-title .ct-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ══ STAT CARDS ══ */
+.stat-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:.9rem 1rem;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,#444)}
+.sc-val{font-family:'Syne',sans-serif;font-weight:800;font-size:1.75rem;line-height:1;color:var(--text)}
+.sc-label{font-size:.68rem;color:var(--muted2);margin-top:.25rem;letter-spacing:.05em;text-transform:uppercase}
+.sc-sub{font-size:.72rem;color:var(--muted);margin-top:.4rem}
+
+/* ══ TEAM PROGRESS ══ */
+.team-row{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.6rem .75rem;border-radius:var(--r);
+  background:var(--s3);border:1px solid var(--border);
+  margin-bottom:.4rem;
+}
+.tr-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tr-name{font-size:.8rem;font-weight:500;min-width:110px;flex-shrink:0}
+.tr-bar{flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.tr-fill{height:100%;border-radius:3px;transition:width .5s ease}
+.tr-pct{font-size:.72rem;font-weight:600;min-width:32px;text-align:right;color:var(--muted2)}
+.tr-tasks{font-size:.65rem;color:var(--muted);white-space:nowrap}
+
+/* ══ SPRINT BOARD ══ */
+.board-wrap{display:flex;gap:1px;flex:1;overflow-x:auto;background:var(--border);border:1px solid var(--border);border-radius:var(--r);min-height:400px}
+.board-wrap::-webkit-scrollbar{height:4px}
+.board-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.bcol{display:flex;flex-direction:column;min-width:240px;flex:1;background:var(--bg);overflow:hidden}
+.bcol-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.75rem .9rem;flex-shrink:0;border-bottom:1px solid var(--border);
+}
+.bcol-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:.5rem}
+.bcol-count{font-size:.65rem;background:rgba(255,255,255,.06);border:1px solid var(--border);padding:.1rem .4rem;border-radius:10px;color:var(--muted2)}
+.bcol-add{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:0 .2rem;transition:color .15s}
+.bcol-add:hover{color:var(--text)}
+.bcol-cards{flex:1;overflow-y:auto;padding:.5rem;display:flex;flex-direction:column;gap:.4rem}
+.bcol-cards::-webkit-scrollbar{width:3px}
+.bcol-cards::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ══ TASK CARDS ══ */
+.tcard{
+  background:var(--s2);border:1px solid var(--border);border-radius:var(--r);
+  padding:.75rem .8rem;cursor:grab;transition:all .15s;
+  position:relative;overflow:hidden;user-select:none;
+}
+.tcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tc-color,#444)}
+.tcard:hover{border-color:var(--border2);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.tcard.dragging{opacity:.45;transform:rotate(1.5deg);cursor:grabbing}
+.tcard-sub{font-size:.58rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--tc-color);margin-bottom:.35rem}
+.tcard-title{font-size:.8rem;font-weight:500;line-height:1.4;margin-bottom:.5rem}
+.tcard-assignee{font-size:.65rem;color:var(--muted2);margin-bottom:.4rem;display:flex;align-items:center;gap:.3rem}
+.tcard-assignee::before{content:'👤';font-size:.7rem}
+.tcard-foot{display:flex;align-items:center;justify-content:space-between;gap:.4rem}
+.tcard-pts{font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;background:rgba(255,255,255,.05);border:1px solid var(--border);padding:.1rem .4rem;border-radius:3px;color:var(--muted2)}
+.tcard-pri{font-size:.58rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:.1rem .4rem;border-radius:3px}
+.pri-high{background:rgba(230,57,70,.15);color:#e63946}
+.pri-med{background:rgba(255,214,10,.12);color:#ffd60a}
+.pri-low{background:rgba(6,214,160,.12);color:#06d6a0}
+.tcard-actions{display:none;position:absolute;top:.4rem;right:.4rem;gap:.2rem}
+.tcard:hover .tcard-actions{display:flex}
+.tca-btn{background:var(--s3);border:1px solid var(--border);color:var(--muted2);font-size:.6rem;padding:.15rem .35rem;border-radius:2px;cursor:pointer;transition:all .1s}
+.tca-btn:hover{color:var(--text);border-color:var(--border2)}
+.drop-zone{min-height:50px;border-radius:4px;border:2px dashed transparent;transition:all .15s;flex-shrink:0}
+.drop-zone.active{border-color:rgba(230,57,70,.5);background:rgba(230,57,70,.05)}
+
+/* ══ MEMBERS ══ */
+.member-card{
+  background:var(--s2);border:1px solid var(--border);border-radius:var(--r);
+  padding:.9rem;display:flex;flex-direction:column;gap:.5rem;
+  transition:border-color .15s;
+}
+.member-card:hover{border-color:var(--border2)}
+.mc-top{display:flex;align-items:center;gap:.65rem}
+.mc-avatar{
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:.85rem;
+  flex-shrink:0;
+}
+.mc-info .mc-name{font-size:.85rem;font-weight:600}
+.mc-info .mc-role{font-size:.68rem;color:var(--muted2)}
+.mc-teams{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.25rem}
+.mc-team-badge{
+  font-size:.58rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  padding:.15rem .5rem;border-radius:3px;
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  color:var(--muted2);
+}
+.mc-status{display:flex;align-items:center;gap:.35rem;font-size:.68rem}
+.mc-status-dot{width:6px;height:6px;border-radius:50%}
+.mc-task-count{margin-left:auto;font-size:.68rem;color:var(--muted2)}
+.absent-flag{background:rgba(230,57,70,.15);border:1px solid rgba(230,57,70,.3);color:var(--red);font-size:.58rem;font-weight:600;padding:.15rem .5rem;border-radius:3px;display:inline-flex;align-items:center;gap:.3rem}
+
+/* ══ PROGRESS REPORTS ══ */
+.report-card{
+  background:var(--s2);border:1px solid var(--border);border-radius:var(--r);
+  padding:1rem;transition:border-color .15s;
+}
+.report-card:hover{border-color:var(--border2)}
+.rc-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.75rem;gap:.5rem}
+.rc-title{font-size:.85rem;font-weight:600}
+.rc-meta{font-size:.65rem;color:var(--muted2);margin-top:.15rem}
+.rc-team-badge{font-size:.6rem;font-weight:600;padding:.2rem .5rem;border-radius:3px;border:1px solid;white-space:nowrap}
+.rc-body{font-size:.78rem;color:var(--muted2);line-height:1.6;margin-bottom:.75rem}
+.rc-attachments{display:flex;flex-wrap:wrap;gap:.4rem}
+.rc-attach{
+  display:flex;align-items:center;gap:.35rem;
+  background:var(--s3);border:1px solid var(--border);border-radius:4px;
+  padding:.3rem .6rem;font-size:.68rem;color:var(--muted2);cursor:pointer;
+  transition:all .15s;
+}
+.rc-attach:hover{border-color:var(--border2);color:var(--text)}
+.rc-attach-icon{font-size:.8rem}
+.upload-area{
+  border:2px dashed var(--border2);border-radius:var(--r);
+  padding:2rem;text-align:center;cursor:pointer;transition:all .2s;
+  color:var(--muted2);font-size:.8rem;
+}
+.upload-area:hover{border-color:var(--blue);color:var(--text);background:rgba(58,134,255,.04)}
+.upload-area input{display:none}
+
+/* ══ COMPETITIONS ══ */
+.comp-card{
+  background:var(--s2);border:1px solid var(--border);border-radius:var(--r);
+  padding:1rem;display:flex;flex-direction:column;gap:.6rem;
+  transition:border-color .15s;
+}
+.comp-card:hover{border-color:var(--border2)}
+.comp-name{font-size:.9rem;font-weight:600}
+.comp-meta{font-size:.72rem;color:var(--muted2);display:flex;flex-wrap:wrap;gap:.5rem}
+.comp-status{font-size:.62rem;font-weight:600;padding:.2rem .55rem;border-radius:3px}
+.comp-registered{background:rgba(6,214,160,.15);color:var(--teal);border:1px solid rgba(6,214,160,.3)}
+.comp-open{background:rgba(58,134,255,.12);color:var(--blue);border:1px solid rgba(58,134,255,.25)}
+.comp-full{background:rgba(90,100,120,.15);color:var(--muted2);border:1px solid var(--border)}
+.comp-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.25rem}
+.integration-row{
+  display:flex;align-items:center;gap:.75rem;
+  background:var(--s3);border:1px solid var(--border);border-radius:var(--r);
+  padding:.65rem .9rem;margin-bottom:.5rem;
+}
+.int-icon{font-size:1.2rem;flex-shrink:0}
+.int-name{font-size:.82rem;font-weight:500}
+.int-desc{font-size:.68rem;color:var(--muted2);margin-top:.1rem}
+.int-status{margin-left:auto;font-size:.62rem;font-weight:600;padding:.15rem .5rem;border-radius:3px}
+.int-connected{background:rgba(6,214,160,.12);color:var(--teal);border:1px solid rgba(6,214,160,.25)}
+.int-disconnected{background:rgba(255,255,255,.05);color:var(--muted2);border:1px solid var(--border)}
+
+/* ══ SCOUTING ══ */
+.scout-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.scout-table th{background:var(--s3);padding:.6rem .8rem;text-align:left;font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border)}
+.scout-table td{padding:.55rem .8rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.scout-table tr:hover td{background:rgba(255,255,255,.02)}
+.scout-table tr:last-child td{border-bottom:none}
+.rank-badge{font-family:'Syne',sans-serif;font-weight:700;font-size:.7rem;padding:.15rem .45rem;border-radius:3px}
+
+/* ══ ATTENDANCE ══ */
+.att-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.5rem}
+.att-card{
+  background:var(--s3);border:1px solid var(--border);border-radius:var(--r);
+  padding:.65rem .75rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;transition:all .15s;
+}
+.att-card:hover{border-color:var(--border2)}
+.att-card.present{border-color:rgba(6,214,160,.3);background:rgba(6,214,160,.05)}
+.att-card.absent{border-color:rgba(230,57,70,.3);background:rgba(230,57,70,.05)}
+.att-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.att-name{font-size:.78rem;font-weight:500}
+.att-role{font-size:.62rem;color:var(--muted2)}
+
+/* ══ MODAL ══ */
+.overlay{
+  position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);
+  display:flex;align-items:center;justify-content:center;padding:1rem;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{
+  background:var(--s2);border:1px solid var(--border2);border-radius:8px;
+  width:100%;max-width:500px;padding:1.5rem;
+  transform:translateY(10px);transition:transform .2s;max-height:90vh;overflow-y:auto;
+}
+.modal::-webkit-scrollbar{width:3px}
+.modal::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.overlay.open .modal{transform:translateY(0)}
+.modal h2{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;margin-bottom:1.25rem}
+.field{margin-bottom:.9rem}
+.field label{display:block;font-size:.62rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);margin-bottom:.35rem}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--s3);border:1px solid var(--border);border-radius:var(--r);
+  padding:.55rem .8rem;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--text);
+  outline:none;transition:border-color .15s;-webkit-appearance:none;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--red)}
+.field textarea{resize:vertical;min-height:75px}
+.field select option{background:#1a1f2e}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.modal-btns{display:flex;gap:.6rem;margin-top:1.25rem}
+.mbtn{flex:1;padding:.65rem;border:none;border-radius:var(--r);font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.mbtn-primary{background:var(--red);color:#fff}
+.mbtn-primary:hover{background:#c1121f}
+.mbtn-secondary{background:var(--s3);color:var(--muted2);border:1px solid var(--border)}
+.mbtn-secondary:hover{color:var(--text);border-color:var(--border2)}
+.mbtn-danger{background:rgba(230,57,70,.15);color:var(--red);border:1px solid rgba(230,57,70,.25)}
+.mbtn-danger:hover{background:rgba(230,57,70,.25)}
+
+/* ══ TOAST ══ */
+.toast{
+  position:fixed;bottom:1.25rem;right:1.25rem;z-index:999;
+  background:var(--s3);border:1px solid var(--border2);border-radius:var(--r);
+  padding:.6rem 1rem;font-size:.78rem;color:var(--text);
+  box-shadow:0 8px 30px rgba(0,0,0,.4);
+  transform:translateY(8px);opacity:0;transition:all .2s;pointer-events:none;
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:rgba(6,214,160,.4);background:rgba(6,214,160,.08)}
+.toast.warning{border-color:rgba(255,214,10,.4);background:rgba(255,214,10,.08)}
+
+/* ══ SUBBAR ══ */
+.subbar{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:1rem}
+.sub-pill{
+  display:flex;align-items:center;gap:.35rem;
+  padding:.25rem .65rem;border-radius:3px;
+  border:1px solid transparent;font-size:.65rem;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;cursor:pointer;
+  transition:all .15s;background:rgba(255,255,255,.03);color:var(--muted2);
+}
+.sub-pill .sp-dot{width:5px;height:5px;border-radius:50%;background:var(--sp-c);flex-shrink:0}
+.sub-pill:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.sub-pill.active{background:rgba(var(--sp-rgb),.12);border-color:rgba(var(--sp-rgb),.4);color:var(--sp-c)}
+.sub-all{
+  padding:.25rem .65rem;border-radius:3px;border:1px solid var(--border2);
+  font-size:.65rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  cursor:pointer;transition:all .15s;background:rgba(255,255,255,.05);color:var(--text);
+}
+.sub-all.active,.sub-all:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}
+
+/* ══ MISC ══ */
+.section-label{font-family:'Syne',sans-serif;font-weight:700;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);margin-bottom:.75rem;margin-top:1.25rem}
+.section-label:first-child{margin-top:0}
+.divider{height:1px;background:var(--border);margin:1rem 0}
+.badge{font-size:.6rem;font-weight:600;padding:.15rem .45rem;border-radius:3px}
+.empty{text-align:center;padding:2.5rem;color:var(--muted);font-size:.8rem;border:1px dashed var(--border);border-radius:var(--r)}
+.chip{display:inline-flex;align-items:center;gap:.3rem;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:3px;padding:.2rem .55rem;font-size:.65rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2)}
+input[type=range]{accent-color:var(--red);width:100%}
+.progress-row{display:flex;align-items:center;gap:.65rem;margin-bottom:.5rem}
+.pr-label{font-size:.75rem;min-width:100px}
+.pr-bar{flex:1;height:7px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden}
+.pr-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.pr-pct{font-size:.72rem;font-weight:600;min-width:34px;text-align:right;color:var(--muted2)}
+
+/* ══ LOGIN SCREEN ══ */
+#loginScreen{
+  position:fixed;inset:0;z-index:9000;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:1rem;
+}
+#loginScreen::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(230,57,70,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(230,57,70,0.04) 1px,transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;
+}
+#loginScreen::after{
+  content:'';position:absolute;
+  top:-10%;left:-5%;width:600px;height:600px;
+  background:radial-gradient(circle,rgba(230,57,70,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.login-box{
+  background:var(--s2);border:1px solid var(--border2);
+  border-radius:12px;width:100%;max-width:400px;
+  padding:2.5rem 2rem;position:relative;z-index:1;
+  box-shadow:0 24px 80px rgba(0,0,0,.6);
+}
+.login-logo{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;
+  color:var(--red);text-align:center;margin-bottom:.35rem;
+}
+.login-logo span{color:var(--text)}
+.login-tagline{text-align:center;font-size:.78rem;color:var(--muted2);margin-bottom:2rem}
+.login-tabs{display:flex;background:var(--s3);border-radius:var(--r);padding:3px;margin-bottom:1.5rem;gap:3px}
+.login-tab{
+  flex:1;padding:.45rem;text-align:center;border-radius:3px;
+  font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;cursor:pointer;
+  color:var(--muted2);transition:all .2s;
+}
+.login-tab.active{background:var(--s2);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.login-form{display:flex;flex-direction:column;gap:.85rem}
+.login-field label{display:block;font-size:.62rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);margin-bottom:.35rem}
+.login-field input,.login-field select{
+  width:100%;background:var(--s3);border:1px solid var(--border);border-radius:var(--r);
+  padding:.6rem .85rem;font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--text);
+  outline:none;transition:border-color .15s;-webkit-appearance:none;
+}
+.login-field input:focus,.login-field select:focus{border-color:var(--red)}
+.login-field select option{background:#1a1f2e}
+.login-btn{
+  width:100%;padding:.75rem;border:none;border-radius:var(--r);
+  font-family:'Syne',sans-serif;font-weight:800;font-size:.85rem;
+  letter-spacing:.1em;text-transform:uppercase;
+  background:var(--red);color:#fff;cursor:pointer;
+  transition:background .15s;margin-top:.25rem;
+}
+.login-btn:hover{background:#c1121f}
+.login-divider{display:flex;align-items:center;gap:.75rem;margin:.25rem 0}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.login-divider span{font-size:.65rem;color:var(--muted);white-space:nowrap}
+.login-error{
+  background:rgba(230,57,70,.12);border:1px solid rgba(230,57,70,.3);
+  border-radius:var(--r);padding:.5rem .75rem;font-size:.75rem;color:var(--red);
+  text-align:center;display:none;
+}
+.login-error.show{display:block}
+.demo-accounts{margin-top:1.25rem;background:var(--s3);border:1px solid var(--border);border-radius:var(--r);padding:.75rem}
+.demo-title{font-size:.6rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}
+.demo-row{display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-bottom:1px solid var(--border);cursor:pointer;transition:all .15s}
+.demo-row:last-child{border-bottom:none}
+.demo-row:hover .demo-fill{opacity:1}
+.demo-name{font-size:.75rem;font-weight:500}
+.demo-role-badge{font-size:.58rem;font-weight:600;padding:.15rem .45rem;border-radius:3px;letter-spacing:.06em;text-transform:uppercase}
+.demo-fill{font-size:.6rem;color:var(--muted2);opacity:0;transition:opacity .15s}
+
+/* ══ USER AVATAR (topbar) ══ */
+.user-avatar{
+  width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:.7rem;
+  cursor:pointer;flex-shrink:0;position:relative;
+  border:2px solid transparent;transition:border-color .15s;
+}
+.user-avatar:hover{border-color:var(--border2)}
+.user-menu{
+  position:absolute;top:calc(100% + 8px);right:0;
+  background:var(--s2);border:1px solid var(--border2);border-radius:var(--r);
+  min-width:200px;z-index:500;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+  display:none;
+}
+.user-menu.open{display:block}
+.um-header{padding:.9rem 1rem;border-bottom:1px solid var(--border)}
+.um-name{font-weight:600;font-size:.85rem}
+.um-role{font-size:.68rem;color:var(--muted2);margin-top:.15rem}
+.um-role-badge{display:inline-block;font-size:.58rem;font-weight:700;padding:.15rem .45rem;border-radius:3px;margin-top:.3rem;letter-spacing:.06em;text-transform:uppercase}
+.um-item{
+  display:flex;align-items:center;gap:.65rem;
+  padding:.55rem 1rem;font-size:.8rem;color:var(--muted2);
+  cursor:pointer;transition:all .15s;
+}
+.um-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.um-item.danger:hover{color:var(--red);background:rgba(230,57,70,.06)}
+.um-divider{height:1px;background:var(--border);margin:.25rem 0}
+
+/* ══ ROLE BADGE COLORS ══ */
+.rb-admin{background:rgba(230,57,70,.15);color:var(--red)}
+.rb-mentor{background:rgba(131,56,236,.15);color:var(--purple)}
+.rb-lead{background:rgba(58,134,255,.15);color:var(--blue)}
+.rb-member{background:rgba(6,214,160,.15);color:var(--teal)}
+.rb-readonly{background:rgba(90,100,120,.15);color:var(--muted2)}
+
+/* ══ ACCESS DENIED ══ */
+.access-denied{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:4rem 2rem;text-align:center;flex:1;
+}
+.access-denied .ad-icon{font-size:3rem;margin-bottom:1rem}
+.access-denied .ad-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.25rem;margin-bottom:.5rem;color:var(--red)}
+.access-denied .ad-sub{font-size:.82rem;color:var(--muted2)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">FRC <span>Hub</span></div>
+    <div class="login-tagline">Team Management Platform &middot; Sign in to continue</div>
+    <div class="login-tabs">
+      <div class="login-tab active" id="tabSignIn" onclick="switchTab('signin')">Sign In</div>
+      <div class="login-tab" id="tabSignUp" onclick="switchTab('signup')">Register</div>
+    </div>
+    <div id="signinForm" class="login-form">
+      <div class="login-error" id="signinError">Invalid email or password.</div>
+      <div class="login-field"><label>Email</label><input id="siEmail" type="email" placeholder="you@team.com" autocomplete="email" onkeydown="if(event.key==='Enter')doSignIn()"/></div>
+      <div class="login-field"><label>Password</label><input id="siPass" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" onkeydown="if(event.key==='Enter')doSignIn()"/></div>
+      <button class="login-btn" onclick="doSignIn()">Sign In &rarr;</button>
+    </div>
+    <div id="signupForm" class="login-form" style="display:none">
+      <div class="login-error" id="signupError">Please fill all fields.</div>
+      <div class="login-field"><label>Full Name</label><input id="suName" type="text" placeholder="Your Name"/></div>
+      <div class="login-field"><label>Email</label><input id="suEmail" type="email" placeholder="you@team.com"/></div>
+      <div class="login-field"><label>Password</label><input id="suPass" type="password" placeholder="Min 6 characters"/></div>
+      <div class="login-field"><label>Confirm Password</label><input id="suPass2" type="password" placeholder="Repeat password"/></div>
+      <div class="login-field"><label>Primary Subsection</label>
+        <select id="suTeam">
+          <option value="Mechanical">Mechanical</option><option value="Design/CAD">Design/CAD</option>
+          <option value="Electrical">Electrical</option><option value="Software">Software</option>
+          <option value="Business">Business</option><option value="Outreach">Outreach</option>
+          <option value="Media">Media</option><option value="Awards">Awards</option>
+          <option value="Drive Team">Drive Team</option><option value="Scouting">Scouting</option>
+        </select>
+      </div>
+      <div class="login-field"><label>Role</label>
+        <select id="suRole"><option value="member">Member</option><option value="lead">Subsection Lead</option><option value="mentor">Mentor</option></select>
+      </div>
+      <button class="login-btn" onclick="doSignUp()">Create Account &rarr;</button>
+    </div>
+    <div class="login-divider"><span>or try a demo account</span></div>
+    <div class="demo-accounts">
+      <div class="demo-title">Quick Login &mdash; click to sign in instantly</div>
+      <div class="demo-row" onclick="fillDemo('admin@frc.team','admin123')">
+        <div class="demo-name">Team Admin</div><span class="demo-role-badge rb-admin">Admin</span><span class="demo-fill">&rarr;</span>
+      </div>
+      <div class="demo-row" onclick="fillDemo('mentor@frc.team','mentor123')">
+        <div class="demo-name">Lead Mentor</div><span class="demo-role-badge rb-mentor">Mentor</span><span class="demo-fill">&rarr;</span>
+      </div>
+      <div class="demo-row" onclick="fillDemo('lead@frc.team','lead123')">
+        <div class="demo-name">Subsection Lead</div><span class="demo-role-badge rb-lead">Lead</span><span class="demo-fill">&rarr;</span>
+      </div>
+      <div class="demo-row" onclick="fillDemo('member@frc.team','member123')">
+        <div class="demo-name">Team Member</div><span class="demo-role-badge rb-member">Member</span><span class="demo-fill">&rarr;</span>
+      </div>
+      <div class="demo-row" onclick="fillDemo('scout@frc.team','scout123')">
+        <div class="demo-name">Scouting (Read-only)</div><span class="demo-role-badge rb-readonly">Read-only</span><span class="demo-fill">&rarr;</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar" id="mainTopbar" style="display:none">
+  <div style="display:flex;align-items:center;gap:.75rem;flex:1;min-width:0">
+    <div class="t-logo">FRC <span>Hub</span></div>
+    <div class="t-sprint" onclick="nav('sprint')">
+      <span style="font-size:.7rem;color:var(--muted2)">&#9654;</span>
+      <span class="t-sprint-name" id="topSprintName">Build Season &middot; Sprint 1</span>
+      <span class="t-sprint-days" id="topSprintDays">12 days left</span>
+    </div>
+  </div>
+  <div class="t-right">
+    <div class="robot-progress-wrap">
+      <span class="robot-pct-label">Robot Build</span>
+      <div class="robot-bar"><div class="robot-fill" id="robotFill" style="width:0%"></div></div>
+      <span class="robot-pct" id="robotPct">0%</span>
+    </div>
+    <button class="t-btn primary" id="topAddTask" onclick="guardedAction(()=>openModal('task'))">+ Task</button>
+    <div style="position:relative" id="userAvatarWrap">
+      <div class="user-avatar" id="userAvatar" onclick="toggleUserMenu()"></div>
+      <div class="user-menu" id="userMenu">
+        <div class="um-header">
+          <div class="um-name" id="umName"></div>
+          <div class="um-role" id="umEmail"></div>
+          <span class="um-role-badge" id="umRoleBadge"></span>
+        </div>
+        <div class="um-item" onclick="nav('settings');toggleUserMenu()"><span>&#9881;&#65039;</span> Settings</div>
+        <div class="um-item" onclick="openChangePassword()"><span>&#128273;</span> Change Password</div>
+        <div class="um-divider"></div>
+        <div class="um-item danger" onclick="doLogout()"><span>&#128682;</span> Sign Out</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SHELL -->
+<div class="shell" id="mainShell" style="display:none">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="nav-section">Overview</div>
+  <div class="nav-item active" onclick="nav('dashboard')"><span style="font-size:.9rem">⚡</span>Dashboard</div>
+  <div class="nav-item" onclick="nav('sprint')"><span style="font-size:.9rem">🏃</span>Sprint Board</div>
+  <div class="nav-item" onclick="nav('progress')"><span style="font-size:.9rem">📈</span>Progress Reports</div>
+
+  <div class="nav-section">Teams</div>
+  <div class="nav-item" onclick="nav('members')"><span style="font-size:.9rem">👥</span>Members<span class="nav-badge" id="nb-members">0</span></div>
+  <div class="nav-item" onclick="nav('tasks')"><span style="font-size:.9rem">✅</span>Tasks<span class="nav-badge" id="nb-tasks">0</span></div>
+  <div class="nav-item" onclick="nav('attendance')"><span style="font-size:.9rem">📋</span>Attendance</div>
+  <div class="nav-item" onclick="nav('scouting')"><span style="font-size:.9rem">🔭</span>Scouting</div>
+
+  <div class="nav-section">Ops</div>
+  <div class="nav-item" onclick="nav('competitions')"><span style="font-size:.9rem">🏆</span>Competitions</div>
+  <div class="nav-item" onclick="nav('integrations')"><span style="font-size:.9rem">🔗</span>Integrations</div>
+  <div class="nav-item" onclick="nav('settings')"><span style="font-size:.9rem">⚙️</span>Settings</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- ══════════════ DASHBOARD ══════════════ -->
+<div class="page active" id="page-dashboard">
+  <div class="page-head">
+    <div><div class="page-title">Dashboard</div><div class="page-sub">Season overview &amp; team status</div></div>
+    <div class="page-actions">
+      <button class="t-btn" onclick="openModal('sprint')">+ New Sprint</button>
+      <button class="t-btn primary" onclick="openModal('task')">+ Add Task</button>
+    </div>
+  </div>
+
+  <!-- Robot progress -->
+  <div class="card" style="margin-bottom:1rem">
+    <div class="card-title"><span>🤖</span> Robot Build Progress</div>
+    <div id="robotSubProgress"></div>
+  </div>
+
+  <div class="grid-4" style="margin-bottom:1rem" id="dashStats"></div>
+
+  <div class="grid-2">
+    <div>
+      <div class="section-label">Sprint Velocity</div>
+      <div class="card" id="dashSprintCard"></div>
+    </div>
+    <div>
+      <div class="section-label">Team Activity</div>
+      <div id="dashTeamRows"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SPRINT BOARD ══════════════ -->
+<div class="page" id="page-sprint">
+  <div class="page-head">
+    <div>
+      <div class="page-title" id="sprintPageTitle">Sprint Board</div>
+      <div class="page-sub" id="sprintPageSub">Drag cards between columns · Ctrl+K to add</div>
+    </div>
+    <div class="page-actions">
+      <button class="t-btn" onclick="openModal('sprint')">Manage Sprint</button>
+      <select id="sprintFilterSub" style="background:var(--s2);border:1px solid var(--border);color:var(--muted2);font-size:.72rem;padding:.3rem .6rem;border-radius:var(--r);outline:none;cursor:pointer" onchange="renderBoard()">
+        <option value="all">All Subsections</option>
+        <option value="Mechanical">Mechanical</option>
+        <option value="Design/CAD">Design/CAD</option>
+        <option value="Electrical">Electrical</option>
+        <option value="Software">Software</option>
+        <option value="Business">Business</option>
+        <option value="Outreach">Outreach</option>
+        <option value="Media">Media</option>
+        <option value="Awards">Awards</option>
+        <option value="Drive Team">Drive Team</option>
+        <option value="Scouting">Scouting</option>
+      </select>
+      <button class="t-btn primary" onclick="openModal('task')">+ Add Task</button>
+    </div>
+  </div>
+  <div class="board-wrap" id="boardWrap">
+    <div class="bcol" id="bcol-backlog">
+      <div class="bcol-head"><div class="bcol-title"><div style="width:7px;height:7px;border-radius:50%;background:#5a6478"></div>Backlog</div><div style="display:flex;align-items:center;gap:.4rem"><span class="bcol-count" id="bcnt-backlog">0</span><button class="bcol-add" onclick="openModal('task','backlog')">+</button></div></div>
+      <div class="bcol-cards" id="bcc-backlog" ondragover="onDragOver(event)" ondrop="onDrop(event,'backlog')" ondragleave="onDragLeave(event)"><div class="drop-zone" id="dz-backlog"></div></div>
+    </div>
+    <div class="bcol" id="bcol-inprog">
+      <div class="bcol-head"><div class="bcol-title"><div style="width:7px;height:7px;border-radius:50%;background:var(--blue)"></div>In Progress</div><div style="display:flex;align-items:center;gap:.4rem"><span class="bcol-count" id="bcnt-inprog">0</span><button class="bcol-add" onclick="openModal('task','inprog')">+</button></div></div>
+      <div class="bcol-cards" id="bcc-inprog" ondragover="onDragOver(event)" ondrop="onDrop(event,'inprog')" ondragleave="onDragLeave(event)"><div class="drop-zone" id="dz-inprog"></div></div>
+    </div>
+    <div class="bcol" id="bcol-review">
+      <div class="bcol-head"><div class="bcol-title"><div style="width:7px;height:7px;border-radius:50%;background:var(--yellow)"></div>Review</div><div style="display:flex;align-items:center;gap:.4rem"><span class="bcol-count" id="bcnt-review">0</span><button class="bcol-add" onclick="openModal('task','review')">+</button></div></div>
+      <div class="bcol-cards" id="bcc-review" ondragover="onDragOver(event)" ondrop="onDrop(event,'review')" ondragleave="onDragLeave(event)"><div class="drop-zone" id="dz-review"></div></div>
+    </div>
+    <div class="bcol" id="bcol-done">
+      <div class="bcol-head"><div class="bcol-title"><div style="width:7px;height:7px;border-radius:50%;background:var(--teal)"></div>Done</div><div style="display:flex;align-items:center;gap:.4rem"><span class="bcol-count" id="bcnt-done">0</span><button class="bcol-add" onclick="openModal('task','done')">+</button></div></div>
+      <div class="bcol-cards" id="bcc-done" ondragover="onDragOver(event)" ondrop="onDrop(event,'done')" ondragleave="onDragLeave(event)"><div class="drop-zone" id="dz-done"></div></div>
+    </div>
+  </div>
+  <!-- Sprint Stats -->
+  <div style="display:flex;gap:1rem;margin-top:1rem;flex-wrap:wrap" id="sprintStats"></div>
+</div>
+
+<!-- ══════════════ PROGRESS REPORTS ══════════════ -->
+<div class="page" id="page-progress">
+  <div class="page-head">
+    <div><div class="page-title">Progress Reports</div><div class="page-sub">CAD/CAM designs, build updates, and team logs</div></div>
+    <div class="page-actions">
+      <button class="t-btn primary" onclick="openModal('report')">+ New Report</button>
+    </div>
+  </div>
+  <div class="upload-area" onclick="document.getElementById('fileUpload').click()" style="margin-bottom:1.25rem">
+    <input type="file" id="fileUpload" multiple accept=".step,.stl,.f3d,.pdf,.jpg,.png,.mp4" onchange="handleFileUpload(event)"/>
+    <div style="font-size:1.5rem;margin-bottom:.5rem">📎</div>
+    <div style="font-weight:500">Drop CAD files, images, or PDFs here</div>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:.25rem">.STEP · .STL · .F3D · .PDF · Images</div>
+  </div>
+  <div id="uploadedFiles" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem"></div>
+  <div id="reportsGrid" class="grid-2"></div>
+</div>
+
+<!-- ══════════════ MEMBERS ══════════════ -->
+<div class="page" id="page-members">
+  <div class="page-head">
+    <div><div class="page-title">Team Members</div><div class="page-sub">Manage roles, teams, and task assignments</div></div>
+    <div class="page-actions">
+      <button class="t-btn primary" onclick="openModal('member')">+ Add Member</button>
+    </div>
+  </div>
+  <div class="subbar" id="memberSubbar"></div>
+  <div class="grid-3" id="membersGrid"></div>
+</div>
+
+<!-- ══════════════ TASKS ══════════════ -->
+<div class="page" id="page-tasks">
+  <div class="page-head">
+    <div><div class="page-title">All Tasks</div><div class="page-sub">View, filter, and reassign tasks across all subsections</div></div>
+    <div class="page-actions">
+      <button class="t-btn primary" onclick="openModal('task')">+ Add Task</button>
+    </div>
+  </div>
+  <div class="subbar" id="taskSubbar"></div>
+  <div id="tasksTable"></div>
+</div>
+
+<!-- ══════════════ ATTENDANCE ══════════════ -->
+<div class="page" id="page-attendance">
+  <div class="page-head">
+    <div><div class="page-title">Attendance</div><div class="page-sub" id="attDate">Today's session</div></div>
+    <div class="page-actions">
+      <button class="t-btn" onclick="markAllPresent()">Mark All Present</button>
+      <button class="t-btn" onclick="autoReassign()">⚡ Auto-Reassign Absent Tasks</button>
+    </div>
+  </div>
+  <div id="attendanceGrid" class="att-grid"></div>
+  <div id="absentAlert" style="margin-top:1rem"></div>
+</div>
+
+<!-- ══════════════ SCOUTING ══════════════ -->
+<div class="page" id="page-scouting">
+  <div class="page-head">
+    <div><div class="page-title">Scouting</div><div class="page-sub">Team performance data &amp; alliance strategy</div></div>
+    <div class="page-actions">
+      <button class="t-btn primary" onclick="openModal('scout')">+ Add Team Data</button>
+    </div>
+  </div>
+  <div class="card" style="overflow:auto">
+    <table class="scout-table" id="scoutTable">
+      <thead><tr>
+        <th>Team #</th><th>Team Name</th><th>Auto Pts</th><th>Teleop Pts</th><th>Climb</th><th>Avg Score</th><th>Rank</th><th>Notes</th><th></th>
+      </tr></thead>
+      <tbody id="scoutBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════ COMPETITIONS ══════════════ -->
+<div class="page" id="page-competitions">
+  <div class="page-head">
+    <div><div class="page-title">Competitions</div><div class="page-sub">Register, track, and manage events</div></div>
+    <div class="page-actions">
+      <button class="t-btn primary" onclick="openModal('comp')">+ Add Competition</button>
+    </div>
+  </div>
+  <div class="grid-2" id="compsGrid"></div>
+</div>
+
+<!-- ══════════════ INTEGRATIONS ══════════════ -->
+<div class="page" id="page-integrations">
+  <div class="page-head">
+    <div><div class="page-title">Integrations</div><div class="page-sub">Connect your team's tools &amp; services</div></div>
+  </div>
+  <div id="intList"></div>
+</div>
+
+<!-- ══════════════ SETTINGS ══════════════ -->
+<div class="page" id="page-settings">
+  <div class="page-head">
+    <div><div class="page-title">Settings</div><div class="page-sub">Team configuration</div></div>
+  </div>
+  <div style="max-width:480px;display:flex;flex-direction:column;gap:.9rem">
+    <div class="field"><label>Team Number</label><input id="teamNum" value="9999" type="number"/></div>
+    <div class="field"><label>Team Name</label><input id="teamName" value="Iron Eagles"/></div>
+    <div class="field"><label>Season Year</label><input id="teamYear" value="2025" type="number"/></div>
+    <div class="field"><label>Robot Build % Override</label><input id="robotOverride" type="range" min="0" max="100" value="0" oninput="setRobotPct(this.value)"/> <span id="overrideVal" style="font-size:.75rem;color:var(--muted2)">0%</span></div>
+    <button class="t-btn primary" onclick="saveSettings()">Save Settings</button>
+  </div>
+</div>
+
+</div><!-- end main -->
+</div><!-- end shell -->
+
+<!-- ══ MODALS ══ -->
+<div class="overlay" id="overlay" onclick="closeMO(event)">
+<div class="modal" id="modalBox"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════════
+const SUBSECTIONS=[
+  {key:'Mechanical',  color:'#fb5607',rgb:'251,86,7'},
+  {key:'Design/CAD',  color:'#3a86ff',rgb:'58,134,255'},
+  {key:'Electrical',  color:'#ffd60a',rgb:'255,214,10'},
+  {key:'Software',    color:'#e63946',rgb:'230,57,70'},
+  {key:'Business',    color:'#8338ec',rgb:'131,56,236'},
+  {key:'Outreach',    color:'#00b4d8',rgb:'0,180,216'},
+  {key:'Media',       color:'#ff006e',rgb:'255,0,110'},
+  {key:'Awards',      color:'#ffd60a',rgb:'255,214,10'},
+  {key:'Drive Team',  color:'#4ade80',rgb:'74,222,128'},
+  {key:'Scouting',    color:'#06d6a0',rgb:'6,214,160'},
+];
+const SC=Object.fromEntries(SUBSECTIONS.map(s=>[s.key,s.color]));
+
+let state = {
+  sprint:{name:'Build Season · Sprint 1',start:Date.now()-7*864e5,end:Date.now()+12*864e5},
+  tasks:[],
+  members:[],
+  reports:[],
+  scoutData:[],
+  competitions:[],
+  uploadedFiles:[],
+  nextId:1,
+  robotPct:0,
+  settings:{teamNum:'9999',teamName:'Iron Eagles',year:'2025'},
+  integrations:[
+    {name:'Slack',icon:'💬',desc:'Team messaging & notifications',connected:false,url:'https://slack.com'},
+    {name:'The Blue Alliance',icon:'🔵',desc:'Competition data & match results',connected:true,url:'https://thebluealliance.com'},
+    {name:'GitHub',icon:'🐙',desc:'Code repositories & version control',connected:true,url:'https://github.com'},
+    {name:'Onshape',icon:'📐',desc:'CAD file collaboration',connected:false,url:'https://onshape.com'},
+    {name:'Google Drive',icon:'📁',desc:'File storage & document sharing',connected:true,url:'https://drive.google.com'},
+    {name:'Chief Delphi',icon:'🤖',desc:'FRC community forum & resources',connected:false,url:'https://chiefdelphi.com'},
+  ],
+};
+
+// Seed members
+const memberSeed=[
+  {name:'Alex Chen',     role:'Lead Mentor', teams:['Mechanical','Design/CAD']},
+  {name:'Jordan Lee',    role:'CAD Lead',    teams:['Design/CAD']},
+  {name:'Sam Rivera',    role:'Programmer',  teams:['Software']},
+  {name:'Taylor Kim',    role:'Electrician', teams:['Electrical']},
+  {name:'Morgan Patel',  role:'Builder',     teams:['Mechanical']},
+  {name:'Casey Wu',      role:'Driver',      teams:['Drive Team','Mechanical']},
+  {name:'Riley Brown',   role:'Scouter',     teams:['Scouting']},
+  {name:'Jamie Ortiz',   role:'Media Lead',  teams:['Media']},
+  {name:'Drew Nguyen',   role:'Business',    teams:['Business']},
+  {name:'Quinn Adams',   role:'Outreach',    teams:['Outreach']},
+  {name:'Blake Torres',  role:'Programmer',  teams:['Software']},
+  {name:'Sage Miller',   role:'Awards Lead', teams:['Awards']},
+];
+memberSeed.forEach(m=>{
+  state.members.push({id:state.nextId++,...m,absent:false,
+    avatar:m.name.split(' ').map(w=>w[0]).join(''),
+    avatarColor:SUBSECTIONS.find(s=>m.teams.includes(s.key))?.color||'#5a6478'
+  });
+});
+
+// Seed tasks
+const taskSeed=[
+  {title:'Model intake mechanism v2',sub:'Design/CAD',priority:'high',points:8,col:'inprog',assignee:'Jordan Lee'},
+  {title:'Design elevator carriage',sub:'Design/CAD',priority:'high',points:13,col:'backlog',assignee:'Jordan Lee'},
+  {title:'Drivetrain frame CAD',sub:'Design/CAD',priority:'high',points:5,col:'done',assignee:'Jordan Lee'},
+  {title:'Wire motor controller bank',sub:'Electrical',priority:'high',points:5,col:'inprog',assignee:'Taylor Kim'},
+  {title:'Route CAN bus harness',sub:'Electrical',priority:'high',points:5,col:'backlog',assignee:'Taylor Kim'},
+  {title:'Test pneumatics circuit',sub:'Electrical',priority:'med',points:3,col:'review',assignee:'Taylor Kim'},
+  {title:'Mill arm pivot plates',sub:'Mechanical',priority:'high',points:8,col:'inprog',assignee:'Morgan Patel'},
+  {title:'Assemble drivetrain',sub:'Mechanical',priority:'high',points:13,col:'done',assignee:'Morgan Patel'},
+  {title:'Fabricate shooter housing',sub:'Mechanical',priority:'med',points:5,col:'backlog',assignee:'Morgan Patel'},
+  {title:'Implement path planner',sub:'Software',priority:'high',points:13,col:'inprog',assignee:'Sam Rivera'},
+  {title:'AprilTag vision pipeline',sub:'Software',priority:'high',points:8,col:'backlog',assignee:'Blake Torres'},
+  {title:'Tune elevator PID',sub:'Software',priority:'high',points:8,col:'review',assignee:'Sam Rivera'},
+  {title:'Write sponsorship deck',sub:'Business',priority:'high',points:5,col:'done',assignee:'Drew Nguyen'},
+  {title:'Update budget spreadsheet',sub:'Business',priority:'med',points:2,col:'backlog',assignee:'Drew Nguyen'},
+  {title:'Film robot reveal video',sub:'Media',priority:'med',points:5,col:'backlog',assignee:'Jamie Ortiz'},
+  {title:'Post build season update',sub:'Media',priority:'low',points:1,col:'done',assignee:'Jamie Ortiz'},
+  {title:'Schedule FLL demo day',sub:'Outreach',priority:'med',points:3,col:'backlog',assignee:'Quinn Adams'},
+  {title:'Write Impact Award essay',sub:'Awards',priority:'high',points:8,col:'inprog',assignee:'Sage Miller'},
+  {title:'Practice drive cycles',sub:'Drive Team',priority:'high',points:3,col:'inprog',assignee:'Casey Wu'},
+  {title:'Scout regional week 1',sub:'Scouting',priority:'med',points:3,col:'backlog',assignee:'Riley Brown'},
+];
+taskSeed.forEach(t=>state.tasks.push({id:state.nextId++,...t}));
+
+// Seed reports
+state.reports=[
+  {id:state.nextId++,title:'Drivetrain Assembly Complete',team:'Mechanical',date:'2025-01-15',body:'Completed full swerve drivetrain assembly. All four modules installed and torqued. Drive motors calibrated. First driving test successful — straight-line consistency within spec.',attachments:[{name:'drivetrain_v3.step',type:'cad'},{name:'assembly_photo.jpg',type:'img'}]},
+  {id:state.nextId++,title:'Intake Mechanism CAD v1',team:'Design/CAD',date:'2025-01-18',body:'First complete CAD model of intake mechanism uploaded. Uses 4 compliant rollers driven by 1 Falcon 500. Fits within frame perimeter. Awaiting mechanical review before sending to shop.',attachments:[{name:'intake_v1.f3d',type:'cad'},{name:'intake_render.png',type:'img'}]},
+  {id:state.nextId++,title:'Electrical Panel Layout',team:'Electrical',date:'2025-01-20',body:'PDP and all motor controllers mounted to electrical panel. CAN chain tested — all devices enumerated. Gyro mounted on central plate. Ready for software integration.',attachments:[{name:'wiring_diagram.pdf',type:'pdf'}]},
+  {id:state.nextId++,title:'Auto Path Testing',team:'Software',date:'2025-01-22',body:'Three-note auto path running reliably in simulation. Field odometry accurate to within 5cm. Deploying to real robot tomorrow for hardware verification.',attachments:[]},
+];
+
+// Seed scouting
+state.scoutData=[
+  {id:state.nextId++,number:'254',name:'The Cheesy Poofs',auto:18,teleop:52,climb:'High',avg:72,rank:1,notes:'Dominant auto, fast shooter'},
+  {id:state.nextId++,number:'1678',name:'Citrus Circuits',auto:16,teleop:48,climb:'High',avg:68,rank:2,notes:'Very consistent, strong defense'},
+  {id:state.nextId++,number:'2056',name:'OP Robotics',auto:14,teleop:44,climb:'Mid',avg:60,rank:3,notes:'Good teleop, mid climb risk'},
+  {id:state.nextId++,number:'4414',name:'HighTide',auto:12,teleop:38,climb:'Low',avg:52,rank:4,notes:'Reliable shooter, weak climb'},
+];
+
+// Seed competitions
+state.competitions=[
+  {id:state.nextId++,name:'Silicon Valley Regional',date:'2025-03-13',location:'San Jose, CA',status:'registered',teamCount:40,link:'https://firstinspires.org'},
+  {id:state.nextId++,name:'Sacramento Regional',date:'2025-03-27',location:'Sacramento, CA',status:'open',teamCount:36,link:'https://firstinspires.org'},
+  {id:state.nextId++,name:'FIRST Championship',date:'2025-04-16',location:'Houston, TX',status:'closed',teamCount:600,link:'https://firstinspires.org'},
+];
+
+// Attendance
+state.members.forEach(m=>m.absent=false);
+state.members[2].absent=true; // Sam absent by default for demo
+state.members[6].absent=true;
+
+// ═══════════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════════
+let currentPage='dashboard';
+function nav(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.getAttribute('onclick')?.includes("'"+id+"'")) n.classList.add('active');
+  });
+  currentPage=id;
+  refreshPage(id);
+}
+function refreshPage(id){
+  if(id==='dashboard') renderDashboard();
+  else if(id==='sprint') renderBoard();
+  else if(id==='progress') renderReports();
+  else if(id==='members') renderMembers();
+  else if(id==='tasks') renderTasksPage();
+  else if(id==='attendance') renderAttendance();
+  else if(id==='scouting') renderScouting();
+  else if(id==='competitions') renderCompetitions();
+  else if(id==='integrations') renderIntegrations();
+  updateGlobalStats();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════════
+function renderDashboard(){
+  // Robot sub-progress
+  const robEl=document.getElementById('robotSubProgress');
+  const subProgress=[
+    {name:'Mechanical',   pct:72, color:'var(--mechanical)'},
+    {name:'Design/CAD',   pct:85, color:'var(--design)'},
+    {name:'Electrical',   pct:60, color:'var(--electrical)'},
+    {name:'Software',     pct:45, color:'var(--software)'},
+  ];
+  robEl.innerHTML=subProgress.map(s=>`
+    <div class="progress-row">
+      <div class="pr-label" style="color:${s.color};font-size:.75rem;font-weight:500">${s.name}</div>
+      <div class="pr-bar"><div class="pr-fill" style="width:${s.pct}%;background:${s.color}"></div></div>
+      <div class="pr-pct" style="color:${s.color}">${s.pct}%</div>
+    </div>`).join('');
+
+  // Stats
+  const done=state.tasks.filter(t=>t.col==='done').length;
+  const inprog=state.tasks.filter(t=>t.col==='inprog').length;
+  const total=state.tasks.length;
+  const pts=state.tasks.filter(t=>t.col==='done').reduce((a,t)=>a+t.points,0);
+  document.getElementById('dashStats').innerHTML=[
+    {val:total,  label:'Total Tasks',    sub:`${done} completed`,    accent:'var(--blue)',   icon:'✅'},
+    {val:inprog, label:'In Progress',    sub:`${state.tasks.filter(t=>t.col==='backlog').length} in backlog`,accent:'var(--yellow)',icon:'🏃'},
+    {val:pts+'pt',label:'Story Pts Done',sub:'this sprint',          accent:'var(--teal)',   icon:'⭐'},
+    {val:state.members.length,label:'Team Members',sub:`${state.members.filter(m=>m.absent).length} absent today`,accent:'var(--purple)',icon:'👥'},
+  ].map(s=>`
+    <div class="stat-card" style="--accent:${s.accent}">
+      <div style="font-size:1.3rem;margin-bottom:.5rem">${s.icon}</div>
+      <div class="sc-val">${s.val}</div>
+      <div class="sc-label">${s.label}</div>
+      <div class="sc-sub">${s.sub}</div>
+    </div>`).join('');
+
+  // Sprint card
+  const daysLeft=Math.max(0,Math.ceil((state.sprint.end-Date.now())/864e5));
+  const totalPts=state.tasks.reduce((a,t)=>a+t.points,0);
+  const donePts=state.tasks.filter(t=>t.col==='done').reduce((a,t)=>a+t.points,0);
+  const pct=totalPts>0?Math.round(donePts/totalPts*100):0;
+  document.getElementById('dashSprintCard').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem">
+      <div>
+        <div style="font-size:.85rem;font-weight:600">${state.sprint.name}</div>
+        <div style="font-size:.68rem;color:var(--muted2);margin-top:.2rem">${daysLeft} days remaining</div>
+      </div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem;color:var(--teal)">${pct}%</div>
+    </div>
+    <div style="height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;margin-bottom:.75rem">
+      <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--teal),var(--blue));border-radius:4px;transition:width .5s ease"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;text-align:center">
+      ${['backlog','inprog','review','done'].map(c=>`
+        <div style="background:var(--s3);border:1px solid var(--border);border-radius:var(--r);padding:.5rem">
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem">${state.tasks.filter(t=>t.col===c).length}</div>
+          <div style="font-size:.58rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em">${{backlog:'Backlog',inprog:'Active',review:'Review',done:'Done'}[c]}</div>
+        </div>`).join('')}
+    </div>`;
+
+  // Team rows
+  const teamEl=document.getElementById('dashTeamRows');
+  teamEl.innerHTML=SUBSECTIONS.slice(0,6).map(s=>{
+    const teamTasks=state.tasks.filter(t=>t.sub===s.key);
+    const teamDone=teamTasks.filter(t=>t.col==='done').length;
+    const pct2=teamTasks.length>0?Math.round(teamDone/teamTasks.length*100):0;
+    return `<div class="team-row">
+      <div class="tr-dot" style="background:${s.color}"></div>
+      <div class="tr-name">${s.key}</div>
+      <div class="tr-bar"><div class="tr-fill" style="width:${pct2}%;background:${s.color}"></div></div>
+      <div class="tr-pct">${pct2}%</div>
+      <div class="tr-tasks">${teamDone}/${teamTasks.length}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SPRINT BOARD
+// ═══════════════════════════════════════════════════════════
+let dragId=null;
+function renderBoard(){
+  const filterSub=document.getElementById('sprintFilterSub')?.value||'all';
+  const cols=['backlog','inprog','review','done'];
+  cols.forEach(col=>{
+    const wrap=document.getElementById('bcc-'+col);
+    [...wrap.querySelectorAll('.tcard')].forEach(c=>c.remove());
+    const dz=document.getElementById('dz-'+col);
+    let tasks=state.tasks.filter(t=>t.col===col);
+    if(filterSub!=='all') tasks=tasks.filter(t=>t.sub===filterSub);
+    tasks.forEach(task=>{
+      const el=buildTCard(task);
+      wrap.insertBefore(el,dz);
+    });
+    const empties=wrap.querySelectorAll('.empty');
+    empties.forEach(e=>e.remove());
+    if(tasks.length===0){
+      const em=document.createElement('div');
+      em.className='empty';em.style.cssText='margin:.25rem;padding:1.5rem';em.textContent='No tasks';
+      wrap.insertBefore(em,dz);
+    }
+    document.getElementById('bcnt-'+col).textContent=state.tasks.filter(t=>t.col===col).length;
+  });
+  // Sprint stats
+  const totalPts=state.tasks.reduce((a,t)=>a+t.points,0);
+  const donePts=state.tasks.filter(t=>t.col==='done').reduce((a,t)=>a+t.points,0);
+  const pct=totalPts>0?Math.round(donePts/totalPts*100):0;
+  const daysLeft=Math.max(0,Math.ceil((state.sprint.end-Date.now())/864e5));
+  document.getElementById('sprintStats').innerHTML=`
+    <div class="chip">Sprint: ${state.sprint.name}</div>
+    <div class="chip">⏱ ${daysLeft}d left</div>
+    <div class="chip">📦 ${totalPts} total pts</div>
+    <div class="chip">✅ ${donePts} done pts</div>
+    <div class="chip" style="color:var(--teal);border-color:rgba(6,214,160,.3)">🚀 ${pct}% complete</div>`;
+}
+
+function buildTCard(task){
+  const el=document.createElement('div');
+  el.className='tcard';el.draggable=true;el.dataset.id=task.id;
+  el.style.setProperty('--tc-color',SC[task.sub]||'#5a6478');
+  const pricls=task.priority==='high'?'pri-high':task.priority==='med'?'pri-med':'pri-low';
+  const priLbl=task.priority==='high'?'High':task.priority==='med'?'Med':'Low';
+  const absent=state.members.find(m=>m.name===task.assignee&&m.absent);
+  el.innerHTML=`
+    <div class="tcard-actions">
+      <button class="tca-btn" onclick="editTask(${task.id})">✏</button>
+      <button class="tca-btn" onclick="reassignTask(${task.id})">↔</button>
+      <button class="tca-btn" onclick="delTask(${task.id})">✕</button>
+    </div>
+    <div class="tcard-sub">${task.sub}</div>
+    <div class="tcard-title">${esc(task.title)}</div>
+    <div class="tcard-assignee" style="${absent?'color:var(--red)':''}">
+      ${task.assignee||'Unassigned'}${absent?'<span style="font-size:.58rem;color:var(--red);margin-left:.3rem">ABSENT</span>':''}
+    </div>
+    <div class="tcard-foot">
+      <span class="tcard-pts">${task.points}pt</span>
+      <span class="tcard-pri ${pricls}">${priLbl}</span>
+    </div>`;
+  el.addEventListener('dragstart',e=>{dragId=task.id;el.classList.add('dragging');e.dataTransfer.effectAllowed='move'});
+  el.addEventListener('dragend',()=>{el.classList.remove('dragging');dragId=null;clearDZ()});
+  return el;
+}
+function onDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';const id=e.currentTarget.id.replace('bcc-','');document.getElementById('dz-'+id)?.classList.add('active')}
+function onDragLeave(e){const wrap=e.currentTarget;if(!wrap.contains(e.relatedTarget)){const id=wrap.id.replace('bcc-','');document.getElementById('dz-'+id)?.classList.remove('active')}}
+function onDrop(e,col){e.preventDefault();clearDZ();if(dragId==null)return;const t=state.tasks.find(x=>x.id===dragId);if(t&&t.col!==col){t.col=col;toast('Moved to '+{backlog:'Backlog',inprog:'In Progress',review:'Review',done:'Done'}[col]);renderBoard();updateGlobalStats()}}
+function clearDZ(){document.querySelectorAll('.drop-zone').forEach(d=>d.classList.remove('active'))}
+
+// ═══════════════════════════════════════════════════════════
+//  PROGRESS REPORTS
+// ═══════════════════════════════════════════════════════════
+function renderReports(){
+  const files=document.getElementById('uploadedFiles');
+  files.innerHTML=state.uploadedFiles.map(f=>`
+    <div class="rc-attach"><span class="rc-attach-icon">${fileIcon(f.type)}</span><span>${f.name}</span><span style="margin-left:.3rem;cursor:pointer;color:var(--red)" onclick="removeFile('${f.name}')">✕</span></div>`).join('');
+  const grid=document.getElementById('reportsGrid');
+  if(state.reports.length===0){grid.innerHTML='<div class="empty">No reports yet</div>';return}
+  grid.innerHTML=state.reports.map(r=>`
+    <div class="report-card">
+      <div class="rc-head">
+        <div>
+          <div class="rc-title">${esc(r.title)}</div>
+          <div class="rc-meta">${r.date} · ${r.team}</div>
+        </div>
+        <div class="rc-team-badge" style="color:${SC[r.team]||'#888'};border-color:${SC[r.team]||'#888'}44;background:${SC[r.team]||'#888'}11">${r.team}</div>
+      </div>
+      <div class="rc-body">${esc(r.body)}</div>
+      ${r.attachments.length>0?`<div class="rc-attachments">${r.attachments.map(a=>`<div class="rc-attach"><span class="rc-attach-icon">${fileIcon(a.type)}</span><span>${a.name}</span></div>`).join('')}</div>`:''}
+    </div>`).join('');
+}
+function fileIcon(type){return type==='cad'?'📐':type==='pdf'?'📄':type==='img'?'🖼':'📎'}
+function handleFileUpload(e){
+  [...e.target.files].forEach(f=>{
+    const ext=f.name.split('.').pop().toLowerCase();
+    const type=['step','stl','f3d','sldprt'].includes(ext)?'cad':['pdf'].includes(ext)?'pdf':['jpg','png','gif','webp'].includes(ext)?'img':'other';
+    if(!state.uploadedFiles.find(u=>u.name===f.name))
+      state.uploadedFiles.push({name:f.name,type,size:f.size});
+  });
+  toast(`${e.target.files.length} file(s) added`,'success');
+  renderReports();
+}
+function removeFile(name){state.uploadedFiles=state.uploadedFiles.filter(f=>f.name!==name);renderReports()}
+
+// ═══════════════════════════════════════════════════════════
+//  MEMBERS
+// ═══════════════════════════════════════════════════════════
+let memberFilter='all';
+function renderMembers(){
+  // Subbar
+  const sb=document.getElementById('memberSubbar');
+  sb.innerHTML=`<div class="sub-all ${memberFilter==='all'?'active':''}" onclick="memberFilter='all';renderMembers()">All</div>`
+    +SUBSECTIONS.map(s=>`<div class="sub-pill ${memberFilter===s.key?'active':''}" style="--sp-c:${s.color};--sp-rgb:${s.rgb}" onclick="memberFilter='${s.key}';renderMembers()"><span class="sp-dot"></span>${s.key}</div>`).join('');
+
+  let members=state.members;
+  if(memberFilter!=='all') members=members.filter(m=>m.teams.includes(memberFilter));
+  const grid=document.getElementById('membersGrid');
+  if(members.length===0){grid.innerHTML='<div class="empty" style="grid-column:1/-1">No members in this subsection</div>';return}
+  grid.innerHTML=members.map(m=>{
+    const myTasks=state.tasks.filter(t=>t.assignee===m.name&&t.col!=='done').length;
+    return `<div class="member-card">
+      <div class="mc-top">
+        <div class="mc-avatar" style="background:${m.avatarColor}22;color:${m.avatarColor}">${m.avatar}</div>
+        <div class="mc-info" style="flex:1;min-width:0">
+          <div class="mc-name">${esc(m.name)}</div>
+          <div class="mc-role">${esc(m.role)}</div>
+        </div>
+        ${m.absent?'<span class="absent-flag">⚠ Absent</span>':''}
+      </div>
+      <div class="mc-teams">${m.teams.map(t=>`<span class="mc-team-badge" style="color:${SC[t]||'#888'};border-color:${SC[t]||'#888'}44">${t}</span>`).join('')}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.25rem">
+        <div class="mc-status">
+          <div class="mc-status-dot" style="background:${m.absent?'var(--red)':'var(--teal)'}"></div>
+          <span style="font-size:.68rem;color:var(--muted2)">${m.absent?'Absent':'Active'}</span>
+        </div>
+        <span class="mc-task-count">${myTasks} open task${myTasks!==1?'s':''}</span>
+      </div>
+      <div style="display:flex;gap:.3rem;margin-top:.4rem">
+        <button class="t-btn" style="flex:1;padding:.3rem;font-size:.62rem" onclick="toggleAbsent(${m.id})">${m.absent?'Mark Present':'Mark Absent'}</button>
+        <button class="t-btn" style="padding:.3rem .6rem;font-size:.62rem" onclick="editMember(${m.id})">✏</button>
+        <button class="t-btn" style="padding:.3rem .6rem;font-size:.62rem" onclick="delMember(${m.id})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('nb-members').textContent=state.members.length;
+}
+function toggleAbsent(id){
+  const m=state.members.find(x=>x.id===id);if(!m)return;
+  m.absent=!m.absent;
+  toast(m.name+(m.absent?' marked absent':' marked present'),m.absent?'warning':'success');
+  renderMembers();renderAttendance();
+}
+function delMember(id){
+  state.members=state.members.filter(x=>x.id!==id);
+  toast('Member removed');renderMembers();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TASKS PAGE
+// ═══════════════════════════════════════════════════════════
+let taskSubFilter='all';
+function renderTasksPage(){
+  const sb=document.getElementById('taskSubbar');
+  sb.innerHTML=`<div class="sub-all ${taskSubFilter==='all'?'active':''}" onclick="taskSubFilter='all';renderTasksPage()">All</div>`
+    +SUBSECTIONS.map(s=>`<div class="sub-pill ${taskSubFilter===s.key?'active':''}" style="--sp-c:${s.color};--sp-rgb:${s.rgb}" onclick="taskSubFilter='${s.key}';renderTasksPage()"><span class="sp-dot"></span>${s.key}</div>`).join('');
+
+  let tasks=state.tasks;
+  if(taskSubFilter!=='all') tasks=tasks.filter(t=>t.sub===taskSubFilter);
+  const colOrder={backlog:0,inprog:1,review:2,done:3};
+  tasks=[...tasks].sort((a,b)=>colOrder[a.col]-colOrder[b.col]);
+  const tbl=document.getElementById('tasksTable');
+  if(tasks.length===0){tbl.innerHTML='<div class="empty">No tasks</div>';return}
+  tbl.innerHTML=`<div class="card" style="overflow:auto"><table class="scout-table">
+    <thead><tr><th>Title</th><th>Subsection</th><th>Assignee</th><th>Priority</th><th>Points</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${tasks.map(t=>{
+      const pricls=t.priority==='high'?'pri-high':t.priority==='med'?'pri-med':'pri-low';
+      const colLabel={backlog:'Backlog',inprog:'In Progress',review:'Review',done:'Done'}[t.col];
+      const colColor={backlog:'#5a6478',inprog:'var(--blue)',review:'var(--yellow)',done:'var(--teal)'}[t.col];
+      const absent=state.members.find(m=>m.name===t.assignee&&m.absent);
+      return `<tr>
+        <td style="font-weight:500;max-width:200px">${esc(t.title)}</td>
+        <td><span style="color:${SC[t.sub]||'#888'};font-size:.7rem;font-weight:600">${t.sub}</span></td>
+        <td style="${absent?'color:var(--red)':''}">${esc(t.assignee||'—')}${absent?'<span style="font-size:.58rem;margin-left:.3rem;color:var(--red)">ABSENT</span>':''}</td>
+        <td><span class="tcard-pri ${pricls}">${t.priority}</span></td>
+        <td style="font-family:Syne,sans-serif;font-weight:700">${t.points}pt</td>
+        <td><span style="color:${colColor};font-size:.7rem;font-weight:600">${colLabel}</span></td>
+        <td style="white-space:nowrap">
+          <button class="tca-btn" onclick="editTask(${t.id})">✏ Edit</button>
+          <button class="tca-btn" onclick="reassignTask(${t.id})" style="margin-left:.2rem">↔ Reassign</button>
+          <button class="tca-btn" onclick="delTask(${t.id})" style="margin-left:.2rem">✕</button>
+        </td>
+      </tr>`;}).join('')}
+    </tbody></table></div>`;
+  document.getElementById('nb-tasks').textContent=state.tasks.length;
+}
+
+function delTask(id){state.tasks=state.tasks.filter(t=>t.id!==id);toast('Task deleted');refreshPage(currentPage);updateGlobalStats()}
+
+// ═══════════════════════════════════════════════════════════
+//  ATTENDANCE
+// ═══════════════════════════════════════════════════════════
+function renderAttendance(){
+  const d=new Date();
+  document.getElementById('attDate').textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const grid=document.getElementById('attendanceGrid');
+  grid.innerHTML=state.members.map(m=>`
+    <div class="att-card ${m.absent?'absent':'present'}" onclick="toggleAbsent(${m.id})">
+      <div class="att-dot" style="background:${m.absent?'var(--red)':'var(--teal)'}"></div>
+      <div>
+        <div class="att-name">${esc(m.name)}</div>
+        <div class="att-role">${esc(m.role)}</div>
+      </div>
+    </div>`).join('');
+
+  const absentMembers=state.members.filter(m=>m.absent);
+  const alertEl=document.getElementById('absentAlert');
+  if(absentMembers.length===0){alertEl.innerHTML='';return}
+  const affectedTasks=state.tasks.filter(t=>absentMembers.find(m=>m.name===t.assignee)&&t.col!=='done');
+  alertEl.innerHTML=`<div class="card" style="border-color:rgba(230,57,70,.3);background:rgba(230,57,70,.05)">
+    <div class="card-title" style="color:var(--red)">⚠ ${absentMembers.length} member(s) absent — ${affectedTasks.length} task(s) affected</div>
+    ${affectedTasks.map(t=>{
+      const members=state.members.filter(m=>!m.absent&&m.teams.includes(t.sub));
+      return `<div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.4rem;background:var(--s3);border:1px solid var(--border);border-radius:var(--r);padding:.6rem .8rem">
+        <div style="flex:1;font-size:.8rem;font-weight:500">${esc(t.title)}</div>
+        <div style="font-size:.68rem;color:var(--red)">${esc(t.assignee)}</div>
+        <select style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-size:.72rem;padding:.25rem .5rem;border-radius:3px;outline:none" onchange="reassignTo(${t.id},this.value)">
+          <option value="">Reassign to…</option>
+          ${members.map(m=>`<option value="${esc(m.name)}">${esc(m.name)}</option>`).join('')}
+        </select>
+      </div>`;}).join('')}
+  </div>`;
+}
+function markAllPresent(){state.members.forEach(m=>m.absent=false);toast('All members marked present','success');renderAttendance();renderMembers()}
+function autoReassign(){
+  let count=0;
+  state.tasks.forEach(t=>{
+    const assignee=state.members.find(m=>m.name===t.assignee);
+    if(assignee&&assignee.absent&&t.col!=='done'){
+      const sub=t.sub;
+      const available=state.members.filter(m=>!m.absent&&m.teams.includes(sub)&&m.name!==t.assignee);
+      if(available.length>0){
+        // pick member with fewest open tasks
+        available.sort((a,b)=>state.tasks.filter(x=>x.assignee===a.name&&x.col!=='done').length-state.tasks.filter(x=>x.assignee===b.name&&x.col!=='done').length);
+        t.assignee=available[0].name;count++;
+      }
+    }
+  });
+  toast(`Auto-reassigned ${count} task(s)`,'success');renderAttendance();renderTasksPage();renderBoard();
+}
+function reassignTo(taskId,name){if(!name)return;const t=state.tasks.find(x=>x.id===taskId);if(t){t.assignee=name;toast(`Reassigned to ${name}`,'success');renderAttendance();renderBoard()}}
+
+// ═══════════════════════════════════════════════════════════
+//  SCOUTING
+// ═══════════════════════════════════════════════════════════
+function renderScouting(){
+  const tbody=document.getElementById('scoutBody');
+  const sorted=[...state.scoutData].sort((a,b)=>b.avg-a.avg).map((t,i)=>({...t,rankPos:i+1}));
+  tbody.innerHTML=sorted.map(t=>`<tr>
+    <td style="font-family:Syne,sans-serif;font-weight:700;color:var(--blue)">${t.number}</td>
+    <td style="font-weight:500">${esc(t.name)}</td>
+    <td>${t.auto}</td><td>${t.teleop}</td>
+    <td><span class="badge" style="${t.climb==='High'?'background:rgba(6,214,160,.15);color:var(--teal)':t.climb==='Mid'?'background:rgba(255,214,10,.12);color:var(--yellow)':'background:rgba(90,100,120,.15);color:var(--muted2)'}">${t.climb}</span></td>
+    <td style="font-family:Syne,sans-serif;font-weight:700">${t.avg}</td>
+    <td><span class="rank-badge" style="${t.rankPos<=3?'background:rgba(255,214,10,.15);color:var(--yellow)':'background:rgba(255,255,255,.05);color:var(--muted2)'}">#${t.rankPos}</span></td>
+    <td style="color:var(--muted2);font-size:.72rem;max-width:150px">${esc(t.notes)}</td>
+    <td><button class="tca-btn" onclick="delScout(${t.id})">✕</button></td>
+  </tr>`).join('');
+}
+function delScout(id){state.scoutData=state.scoutData.filter(x=>x.id!==id);renderScouting()}
+
+// ═══════════════════════════════════════════════════════════
+//  COMPETITIONS
+// ═══════════════════════════════════════════════════════════
+function renderCompetitions(){
+  const grid=document.getElementById('compsGrid');
+  grid.innerHTML=state.competitions.map(c=>`
+    <div class="comp-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="comp-name">${esc(c.name)}</div>
+        <span class="comp-status ${c.status==='registered'?'comp-registered':c.status==='open'?'comp-open':'comp-full'}">${c.status==='registered'?'✓ Registered':c.status==='open'?'Open':'Closed'}</span>
+      </div>
+      <div class="comp-meta">
+        <span>📅 ${c.date}</span>
+        <span>📍 ${esc(c.location)}</span>
+        <span>👥 ${c.teamCount} teams</span>
+      </div>
+      <div class="comp-actions">
+        ${c.status==='open'?`<button class="t-btn primary" onclick="registerComp(${c.id})">Register Now</button>`:''}
+        ${c.status==='registered'?`<button class="t-btn" style="color:var(--teal);border-color:rgba(6,214,160,.3)">✓ Registered</button>`:''}
+        <a href="${c.link}" target="_blank" class="t-btn" style="text-decoration:none">↗ View Event</a>
+        <button class="t-btn" onclick="delComp(${c.id})" style="color:var(--red)">✕</button>
+      </div>
+    </div>`).join('');
+}
+function registerComp(id){const c=state.competitions.find(x=>x.id===id);if(c){c.status='registered';toast('Registered for '+c.name,'success');renderCompetitions()}}
+function delComp(id){state.competitions=state.competitions.filter(x=>x.id!==id);renderCompetitions()}
+
+// ═══════════════════════════════════════════════════════════
+//  INTEGRATIONS
+// ═══════════════════════════════════════════════════════════
+function renderIntegrations(){
+  document.getElementById('intList').innerHTML=state.integrations.map((i,idx)=>`
+    <div class="integration-row">
+      <div class="int-icon">${i.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div class="int-name">${i.name}</div>
+        <div class="int-desc">${i.desc}</div>
+      </div>
+      <span class="int-status ${i.connected?'int-connected':'int-disconnected'}">${i.connected?'Connected':'Not connected'}</span>
+      <button class="t-btn" style="margin-left:.5rem" onclick="toggleIntegration(${idx})">${i.connected?'Disconnect':'Connect'}</button>
+      <a href="${i.url}" target="_blank" class="t-btn" style="text-decoration:none;margin-left:.3rem">↗</a>
+    </div>`).join('');
+}
+function toggleIntegration(idx){
+  state.integrations[idx].connected=!state.integrations[idx].connected;
+  toast((state.integrations[idx].connected?'Connected to ':'Disconnected from ')+state.integrations[idx].name,state.integrations[idx].connected?'success':'warning');
+  renderIntegrations();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════════════════════════
+let modalMode='',modalEditId=null,modalDefaultCol='backlog';
+function openModal(type,extra){
+  modalMode=type;modalEditId=null;
+  const box=document.getElementById('modalBox');
+  if(type==='task'){
+    modalDefaultCol=extra||'backlog';
+    box.innerHTML=taskModalHTML();
+  } else if(type==='sprint'){
+    box.innerHTML=sprintModalHTML();
+  } else if(type==='report'){
+    box.innerHTML=reportModalHTML();
+  } else if(type==='member'){
+    box.innerHTML=memberModalHTML();
+  } else if(type==='scout'){
+    box.innerHTML=scoutModalHTML();
+  } else if(type==='comp'){
+    box.innerHTML=compModalHTML();
+  }
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(()=>box.querySelector('input,textarea')?.focus(),80);
+}
+function editTask(id){
+  const t=state.tasks.find(x=>x.id===id);if(!t)return;
+  modalMode='task';modalEditId=id;
+  const box=document.getElementById('modalBox');
+  box.innerHTML=taskModalHTML(t);
+  document.getElementById('overlay').classList.add('open');
+}
+function editMember(id){
+  const m=state.members.find(x=>x.id===id);if(!m)return;
+  modalMode='member';modalEditId=id;
+  const box=document.getElementById('modalBox');
+  box.innerHTML=memberModalHTML(m);
+  document.getElementById('overlay').classList.add('open');
+}
+function reassignTask(id){
+  const t=state.tasks.find(x=>x.id===id);if(!t)return;
+  const box=document.getElementById('modalBox');
+  modalMode='reassign';modalEditId=id;
+  const candidates=state.members.filter(m=>m.teams.includes(t.sub)||true);
+  box.innerHTML=`<h2>Reassign Task</h2>
+    <div style="margin-bottom:1rem;color:var(--muted2);font-size:.82rem">"${esc(t.title)}"</div>
+    <div class="field"><label>Assign To</label>
+      <select id="mReassignTo">
+        ${state.members.map(m=>`<option value="${esc(m.name)}" ${t.assignee===m.name?'selected':''}>${esc(m.name)} — ${m.teams.join(', ')}${m.absent?' (ABSENT)':''}</option>`).join('')}
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="mbtn mbtn-primary" onclick="doReassign()">Reassign</button>
+    </div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+function doReassign(){
+  const t=state.tasks.find(x=>x.id===modalEditId);if(!t)return;
+  t.assignee=document.getElementById('mReassignTo').value;
+  toast('Reassigned to '+t.assignee,'success');closeModal();refreshPage(currentPage);
+}
+
+function taskModalHTML(t){
+  const sub=t?.sub||'Mechanical';
+  return `<h2>${t?'Edit Task':'New Task'}</h2>
+    <div class="field"><label>Title</label><input id="mTitle" value="${esc(t?.title||'')}"/></div>
+    <div class="field-row">
+      <div class="field"><label>Subsection</label><select id="mSub">
+        ${SUBSECTIONS.map(s=>`<option value="${s.key}" ${sub===s.key?'selected':''}>${s.key}</option>`).join('')}
+      </select></div>
+      <div class="field"><label>Assignee</label><select id="mAssignee">
+        <option value="">Unassigned</option>
+        ${state.members.map(m=>`<option value="${esc(m.name)}" ${t?.assignee===m.name?'selected':''}>${esc(m.name)}</option>`).join('')}
+      </select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Priority</label><select id="mPri">
+        <option value="high" ${t?.priority==='high'?'selected':''}>🔴 High</option>
+        <option value="med" ${(!t||t?.priority==='med')?'selected':''}>🟡 Med</option>
+        <option value="low" ${t?.priority==='low'?'selected':''}>🟢 Low</option>
+      </select></div>
+      <div class="field"><label>Story Points</label><select id="mPts">
+        ${[1,2,3,5,8,13].map(n=>`<option ${(t?.points||3)===n?'selected':''}>${n}</option>`).join('')}
+      </select></div>
+    </div>
+    <div class="field"><label>Column</label><select id="mCol">
+      <option value="backlog" ${(!t||t?.col==='backlog')?'selected':''}>Backlog</option>
+      <option value="inprog" ${t?.col==='inprog'?'selected':''}>In Progress</option>
+      <option value="review" ${t?.col==='review'?'selected':''}>Review</option>
+      <option value="done" ${t?.col==='done'?'selected':''}>Done</option>
+    </select></div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-secondary" onclick="closeModal()">Cancel</button>
+      ${t?`<button class="mbtn mbtn-danger" onclick="delTask(${t.id});closeModal()">Delete</button>`:''}
+      <button class="mbtn mbtn-primary" onclick="saveTask()">Save Task</button>
+    </div>`;
+}
+function saveTask(){
+  const title=document.getElementById('mTitle')?.value?.trim();
+  if(!title){document.getElementById('mTitle')?.focus();return}
+  const data={title,sub:document.getElementById('mSub').value,assignee:document.getElementById('mAssignee').value,priority:document.getElementById('mPri').value,points:Number(document.getElementById('mPts').value),col:document.getElementById('mCol').value};
+  if(modalEditId){Object.assign(state.tasks.find(t=>t.id===modalEditId),data);toast('Task updated','success')}
+  else{state.tasks.push({id:state.nextId++,...data});toast('Task added','success')}
+  closeModal();refreshPage(currentPage);updateGlobalStats();
+}
+
+function sprintModalHTML(){
+  const s=state.sprint;
+  const fmt=d=>new Date(d).toISOString().split('T')[0];
+  return `<h2>Manage Sprint</h2>
+    <div class="field"><label>Sprint Name</label><input id="mSpName" value="${esc(s.name)}"/></div>
+    <div class="field-row">
+      <div class="field"><label>Start Date</label><input type="date" id="mSpStart" value="${fmt(s.start)}"/></div>
+      <div class="field"><label>End Date</label><input type="date" id="mSpEnd" value="${fmt(s.end)}"/></div>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="mbtn mbtn-primary" onclick="saveSprint()">Save Sprint</button>
+    </div>`;
+}
+function saveSprint(){
+  state.sprint.name=document.getElementById('mSpName').value||state.sprint.name;
+  state.sprint.start=new Date(document.getElementById('mSpStart').value).getTime();
+  state.sprint.end=new Date(document.getElementById('mSpEnd').value).getTime();
+  document.getElementById('topSprintName').textContent=state.sprint.name;
+  const days=Math.max(0,Math.ceil((state.sprint.end-Date.now())/864e5));
+  document.getElementById('topSprintDays').textContent=days+' days left';
+  toast('Sprint updated','success');closeModal();renderBoard();
+}
+
+function reportModalHTML(){
+  return `<h2>New Progress Report</h2>
+    <div class="field"><label>Title</label><input id="mRTitle" placeholder="e.g. Intake Mechanism Complete"/></div>
+    <div class="field"><label>Team / Subsection</label><select id="mRTeam">
+      ${SUBSECTIONS.map(s=>`<option value="${s.key}">${s.key}</option>`).join('')}
+    </select></div>
+    <div class="field"><label>Date</label><input type="date" id="mRDate" value="${new Date().toISOString().split('T')[0]}"/></div>
+    <div class="field"><label>Report Body</label><textarea id="mRBody" placeholder="Describe progress, blockers, next steps…"></textarea></div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="mbtn mbtn-primary" onclick="saveReport()">Save Report</button>
+    </div>`;
+}
+function saveReport(){
+  const title=document.getElementById('mRTitle')?.value?.trim();
+  if(!title)return;
+  state.reports.unshift({id:state.nextId++,title,team:document.getElementById('mRTeam').value,date:document.getElementById('mRDate').value,body:document.getElementById('mRBody').value,attachments:state.uploadedFiles.map(f=>({name:f.name,type:f.type}))});
+  state.uploadedFiles=[];
+  toast('Report saved','success');closeModal();renderReports();
+}
+
+function memberModalHTML(m){
+  return `<h2>${m?'Edit Member':'Add Member'}</h2>
+    <div class="field"><label>Full Name</label><input id="mMName" value="${esc(m?.name||'')}"/></div>
+    <div class="field"><label>Role / Title</label><input id="mMRole" value="${esc(m?.role||'')}"/></div>
+    <div class="field"><label>Primary Team</label><select id="mMTeam">
+      ${SUBSECTIONS.map(s=>`<option value="${s.key}" ${m?.teams.includes(s.key)?'selected':''}>${s.key}</option>`).join('')}
+    </select></div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="mbtn mbtn-primary" onclick="saveMember()">Save Member</button>
+    </div>`;
+}
+function saveMember(){
+  const name=document.getElementById('mMName')?.value?.trim();
+  if(!name)return;
+  const teams=[document.getElementById('mMTeam').value];
+  const role=document.getElementById('mMRole').value;
+  const color=SUBSECTIONS.find(s=>s.key===teams[0])?.color||'#5a6478';
+  if(modalEditId){
+    const m=state.members.find(x=>x.id===modalEditId);
+    Object.assign(m,{name,role,teams,avatarColor:color,avatar:name.split(' ').map(w=>w[0]).join('')});
+    toast('Member updated','success');
+  } else {
+    state.members.push({id:state.nextId++,name,role,teams,absent:false,avatarColor:color,avatar:name.split(' ').map(w=>w[0]).join('')});
+    toast('Member added','success');
+  }
+  closeModal();renderMembers();renderAttendance();
+}
+
+function scoutModalHTML(){
+  return `<h2>Add Team Data</h2>
+    <div class="field-row">
+      <div class="field"><label>Team #</label><input id="mSNum" type="number" placeholder="1234"/></div>
+      <div class="field"><label>Team Name</label><input id="mSName" placeholder="Team Name"/></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Auto Points</label><input id="mSAuto" type="number" placeholder="0"/></div>
+      <div class="field"><label>Teleop Points</label><input id="mSTele" type="number" placeholder="0"/></div>
+    </div>
+    <div class="field"><label>Climb</label><select id="mSClimb"><option>High</option><option>Mid</option><option>Low</option><option>None</option></select></div>
+    <div class="field"><label>Notes</label><textarea id="mSNotes" placeholder="Strategic notes…"></textarea></div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="mbtn mbtn-primary" onclick="saveScout()">Save</button>
+    </div>`;
+}
+function saveScout(){
+  const num=document.getElementById('mSNum')?.value;if(!num)return;
+  const auto=Number(document.getElementById('mSAuto').value)||0;
+  const tele=Number(document.getElementById('mSTele').value)||0;
+  state.scoutData.push({id:state.nextId++,number:num,name:document.getElementById('mSName').value,auto,teleop:tele,climb:document.getElementById('mSClimb').value,avg:auto+tele,notes:document.getElementById('mSNotes').value});
+  toast('Team data added','success');closeModal();renderScouting();
+}
+
+function compModalHTML(){
+  return `<h2>Add Competition</h2>
+    <div class="field"><label>Event Name</label><input id="mCName" placeholder="Regional Name"/></div>
+    <div class="field-row">
+      <div class="field"><label>Date</label><input type="date" id="mCDate"/></div>
+      <div class="field"><label>Location</label><input id="mCLoc" placeholder="City, State"/></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Team Count</label><input id="mCTeams" type="number" placeholder="40"/></div>
+      <div class="field"><label>Status</label><select id="mCStat"><option value="open">Open</option><option value="registered">Registered</option><option value="closed">Closed</option></select></div>
+    </div>
+    <div class="field"><label>Event Link</label><input id="mCLink" placeholder="https://…" type="url"/></div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="mbtn mbtn-primary" onclick="saveComp()">Save Competition</button>
+    </div>`;
+}
+function saveComp(){
+  const name=document.getElementById('mCName')?.value?.trim();if(!name)return;
+  state.competitions.push({id:state.nextId++,name,date:document.getElementById('mCDate').value,location:document.getElementById('mCLoc').value,status:document.getElementById('mCStat').value,teamCount:Number(document.getElementById('mCTeams').value)||0,link:document.getElementById('mCLink').value||'#'});
+  toast('Competition added','success');closeModal();renderCompetitions();
+}
+
+function closeModal(){document.getElementById('overlay').classList.remove('open')}
+function closeMO(e){if(e.target===document.getElementById('overlay'))closeModal()}
+
+// ═══════════════════════════════════════════════════════════
+//  GLOBAL STATS & ROBOT PCT
+// ═══════════════════════════════════════════════════════════
+function updateGlobalStats(){
+  const done=state.tasks.filter(t=>t.col==='done').length;
+  const total=state.tasks.length;
+  const buildSubs=['Mechanical','Design/CAD','Electrical','Software'];
+  const buildDone=state.tasks.filter(t=>buildSubs.includes(t.sub)&&t.col==='done').length;
+  const buildTotal=state.tasks.filter(t=>buildSubs.includes(t.sub)).length;
+  const pct=buildTotal>0?Math.round(buildDone/buildTotal*100):0;
+  setRobotPct(pct);
+  document.getElementById('nb-tasks').textContent=total;
+  document.getElementById('nb-members').textContent=state.members.length;
+}
+function setRobotPct(val){
+  state.robotPct=Number(val);
+  document.getElementById('robotFill').style.width=val+'%';
+  document.getElementById('robotPct').textContent=val+'%';
+  const slider=document.getElementById('robotOverride');
+  if(slider) slider.value=val;
+  const ov=document.getElementById('overrideVal');
+  if(ov) ov.textContent=val+'%';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════════════════════════
+function saveSettings(){
+  state.settings.teamNum=document.getElementById('teamNum').value;
+  state.settings.teamName=document.getElementById('teamName').value;
+  state.settings.year=document.getElementById('teamYear').value;
+  document.querySelector('.t-logo').innerHTML=`FRC <span>${state.settings.teamName}</span>`;
+  toast('Settings saved','success');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════════
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+let toastTimer;
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show'+(type?' '+type:'');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className='toast',2200);
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeModal();
+  if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();openModal('task')}
+});
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+updateGlobalStats();
+renderDashboard();
+renderIntegrations();
+</script>
+</body>
+</html>
